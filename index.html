@@ -2,18 +2,19 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>دفتر المحاضرة · تحليل الخوارزميات</title>
-<meta name="description" content="شرائح الفصل الثالث مع مساحة للكتابة وحفظ مستقل لكل شعبة.">
+<title>دفتر المحاضرة · المواد</title>
+<meta name="description" content="المواد والشرائح والشعب والملاحظات.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d28d9'/%3E%3Cpath d='M8 8h16v12H8zM12 25l4-5 4 5' stroke='white' fill='none' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=5">
-<script defer src="slides.js?v=2"></script><script defer src="app.js?v=6"></script><script defer src="publishing-config.js"></script><script defer src="publisher.js?v=5"></script>
+<link rel="stylesheet" href="style.css?v=7">
+<script defer src="slides.js?v=7"></script><script defer src="app.js?v=7"></script><script defer src="publishing-config.js"></script><script defer src="library-ui.js?v=1"></script><script defer src="publisher.js?v=7"></script>
 </head>
 <body class="account-locked">
 <div id="accountGate" class="account-gate"><div><h1>دفتر المحاضرة</h1><p>ادخل إلى حسابك لفتح شعبك وملاحظاتك.</p><button id="connectBtn" class="primary">فتح دفتري</button><p id="connectStatus" role="status"></p></div></div>
 <header class="topbar">
- <div class="brand"><span class="brand-mark" aria-hidden="true">✎</span><div><h1>دفتر المحاضرة</h1><p>الفصل الثالث · تحليل الخوارزميات</p></div></div>
- <div class="top-actions"><button id="accountBtn">حسابي</button><button id="logoutBtn">خروج</button><span id="saveStatus" role="status">محفوظ على هذا الجهاز</span><button id="syncBtn">نشر الملاحظات</button><button id="studentLinkBtn">رابط الشعبة</button><button id="filesBtn" class="quiet">حفظ ومشاركة</button><button id="presentBtn" class="primary">وضع العرض <span aria-hidden="true">⛶</span></button></div>
+ <div class="brand"><span class="brand-mark" aria-hidden="true">✎</span><div><h1>دفتر المحاضرة</h1><p>المواد والفصول الدراسية</p></div></div>
+ <div class="top-actions"><button id="homeBtn">المواد والفصول</button><button id="directPrintBtn">طباعة / PDF</button><button id="accountBtn">حسابي</button><button id="logoutBtn">خروج</button><span id="saveStatus" role="status">محفوظ على هذا الجهاز</span><button id="syncBtn">نشر الملاحظات</button><button id="studentLinkBtn">رابط الشعبة</button><button id="filesBtn" class="quiet">حفظ ومشاركة</button><button id="presentBtn" class="primary">وضع العرض <span aria-hidden="true">⛶</span></button></div>
 </header>
+<section id="homePage" hidden><h2>موادي</h2><div id="courseCards" class="cards"></div><button id="addCourseBtn">＋ مادة جديدة</button><h2>الفصول الدراسية الفعالة</h2><div id="termCards" class="cards"></div><button id="addTermBtn">＋ فصل دراسي جديد</button><details><summary>الفصول غير الفعالة</summary><div id="inactiveTerms"></div></details></section>
 <section class="sessions" aria-label="الفصل الدراسي والشعبة">
  <label class="term-label">الفصل الدراسي <select id="termSelect" aria-label="الفصل الدراسي"></select></label>
  <nav id="sessionTabs" aria-label="نسخ المحاضرة"></nav>
@@ -22,18 +23,18 @@
 <main>
  <aside class="filmstrip" aria-label="الشرائح"><div class="rail-heading">الشرائح <span>06</span></div><div id="thumbs"></div></aside>
  <section class="workspace" aria-label="مساحة العرض والشرح">
-  <div class="workspace-head"><div><span class="eyebrow" id="sessionLabel">الشعبة التجريبية</span><h2 id="slideTitle"></h2></div><div class="view-actions"><button id="notesBtn" aria-pressed="false">مساحة جانبية</button><button id="inkBtn" aria-pressed="true">إخفاء الملاحظات</button></div></div>
+  <div class="workspace-head"><div><span class="eyebrow" id="sessionLabel">الشعبة التجريبية</span><h2 id="slideTitle"></h2></div><div class="view-actions"><select id="chapterSelect" aria-label="فصل الكتاب"><option value="all">كل فصول الكتاب</option><option value="1">الفصل الأول</option><option value="2">الفصل الثاني</option><option value="3">الفصل الثالث</option></select><button id="visibilityBtn">ظهور الشرائح</button><button id="linksBtn">روابط الشريحة</button><button id="notesBtn" aria-pressed="false">مساحة جانبية</button><button id="inkBtn" aria-pressed="true">إخفاء الملاحظات</button></div></div>
   <div class="toolbar" role="toolbar" aria-label="أدوات الكتابة">
-   <div class="tool-group"><button id="penBtn" class="selected" aria-pressed="true" title="قلم (P)">✎ <span>قلم</span></button><button id="eraserBtn" aria-pressed="false" title="ممحاة خط كامل (E)">⌫ <span>ممحاة</span></button></div>
+   <div class="tool-group"><button id="coverBtn">غطاء إجابة</button><button id="resetCoversBtn">إعادة الأغطية</button><button id="manageCoversBtn">إدارة الأغطية</button><button id="penBtn" class="selected" aria-pressed="true" title="قلم (P)">✎ <span>قلم</span></button><button id="eraserBtn" aria-pressed="false" title="ممحاة خط كامل (E)">⌫ <span>ممحاة</span></button></div>
    <div class="tool-group colors" aria-label="لون القلم"><button class="swatch chosen" data-color="#6d28d9" style="--swatch:#6d28d9" aria-label="بنفسجي" aria-pressed="true"></button><button class="swatch" data-color="#dc2626" style="--swatch:#dc2626" aria-label="أحمر" aria-pressed="false"></button><button class="swatch" data-color="#2563eb" style="--swatch:#2563eb" aria-label="أزرق" aria-pressed="false"></button><button class="swatch" data-color="#172033" style="--swatch:#172033" aria-label="أسود" aria-pressed="false"></button></div>
    <label class="width-label">السُمك <input id="width" type="range" min="2" max="12" value="4" aria-label="سمك القلم"><span id="widthValue">4</span></label>
    <div class="tool-group"><button id="undoBtn" title="تراجع (Ctrl+Z)" aria-label="تراجع">↶</button><button id="redoBtn" title="إعادة (Ctrl+Shift+Z)" aria-label="إعادة">↷</button><button id="clearBtn" class="danger-text" title="مسح ملاحظات هذه الشريحة">مسح</button></div>
    <button id="exitPresent" hidden>إنهاء العرض</button>
   </div>
   <div id="rawBanner" class="raw-banner" hidden>نسخة خام للعرض فقط. <button id="rawCreate">أنشئ شعبة للكتابة عليها</button></div>
-  <div id="stage" class="stage">
+  <div id="slideLinks" class="slide-links"></div><div id="stage" class="stage">
    <div id="board" class="board">
-    <div id="slideSurface" class="slide-surface"><img id="slideImage" alt="" draggable="false"><canvas id="slideCanvas" aria-label="الكتابة على الشريحة"></canvas></div>
+    <div id="slideSurface" class="slide-surface"><img id="slideImage" alt="" draggable="false"><div id="coverLayer"></div><canvas id="slideCanvas" aria-label="الكتابة على الشريحة"></canvas></div>
     <div id="noteSurface" class="note-surface" hidden><span class="note-heading">مساحة الشرح</span><canvas id="noteCanvas" aria-label="الكتابة بجانب الشريحة"></canvas></div>
    </div>
   </div>
@@ -46,4 +47,4 @@
 <dialog id="filesDialog"><header><h2>حفظ ومشاركة</h2><button class="close-dialog" aria-label="إغلاق">×</button></header><p class="subtle">الحفظ التلقائي خاص بهذا المتصفح. نزّل نسخة احتياطية للاحتفاظ بالشرح خارج الجهاز.</p><div class="file-actions"><button id="backupBtn"><strong>تنزيل نسخة قابلة للتعديل</strong><span>ملاحظات الشعبة الحالية، لإعادة فتحها لاحقًا</span></button><button id="importBtn"><strong>استيراد نسخة محفوظة</strong><span>تُضاف كشعبة جديدة، دون استبدال ملاحظاتك</span></button><button id="shareBtn"><strong>نسخة للطلبة</strong><span>ملف عرض مستقل يضم الشرائح والملاحظات</span></button><button id="printBtn"><strong>طباعة / حفظ PDF</strong><span>الشرائح مع الملاحظات حسب وضع العرض الحالي</span></button></div><p class="connection-note">اضغط «نشر الملاحظات» ليظهر الشرح عند تحديث رابط الشعبة. أرشفة الشعبة توقف الوصول إلى شرحها عبر الرابط. لا يمكن سحب نسخة سبق تنزيلها.</p><input type="file" id="importFile" accept=".json,application/json" hidden></dialog>
 
 
-</body></html>
+<dialog id="libraryDialog"><header><h2 id="libraryDialogTitle"></h2><button id="closeLibraryDialog" aria-label="إغلاق">×</button></header><div id="libraryDialogBody"></div></dialog></body></html>

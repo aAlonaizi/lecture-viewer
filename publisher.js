@@ -25,7 +25,8 @@ function transact(operation,session={}){
   const closed=setInterval(()=>{if(popup.closed)finish(Error('أُغلقت نافذة النشر قبل اكتماله.'));},1500);
  });
 }
-document.getElementById('connectBtn').onclick=async()=>{try{document.getElementById('connectStatus').textContent='أكمل الدخول في النافذة المفتوحة…';const result=await transact('connect');workspace.activate(result.account,result.sections);document.getElementById('accountGate').hidden=true;document.body.classList.remove('account-locked');document.getElementById('accountBtn').textContent=result.account.role==='admin'?'إدارة المدرسين':'حسابي';}catch(e){document.getElementById('connectStatus').textContent=e.message;}};
+window.saveLectureSetting=(type,data)=>transact(type,data);
+document.getElementById('connectBtn').onclick=async()=>{try{document.getElementById('connectStatus').textContent='أكمل الدخول في النافذة المفتوحة…';const result=await transact('connect');workspace.activate(result.account,result.sections);window.LectureLibrary.activate(result.library,result.preferences);document.getElementById('accountGate').hidden=true;document.body.classList.remove('account-locked');document.getElementById('accountBtn').textContent=result.account.role==='admin'?'إدارة المدرسين':'حسابي';}catch(e){document.getElementById('connectStatus').textContent=e.message;}};
 document.getElementById('accountBtn').onclick=()=>window.open(config.apiBase+'/account.html','lecture-account','width=780,height=750');
 document.getElementById('logoutBtn').onclick=async()=>{try{await transact('logout');workspace.lock();document.getElementById('accountGate').hidden=false;document.body.classList.add('account-locked');document.getElementById('connectStatus').textContent='تم تسجيل الخروج.';}catch(e){workspace.toast(e.message);}};
 document.getElementById('syncBtn').onclick=async()=>{
