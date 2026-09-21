@@ -5,18 +5,18 @@
 <title>دفتر المحاضرة · تحليل الخوارزميات</title>
 <meta name="description" content="شرائح الفصل الثالث مع مساحة للكتابة وحفظ مستقل لكل شعبة.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d28d9'/%3E%3Cpath d='M8 8h16v12H8zM12 25l4-5 4 5' stroke='white' fill='none' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css">
-<script defer src="slides.js"></script><script defer src="app.js"></script>
+<link rel="stylesheet" href="style.css?v=2">
+<script defer src="slides.js?v=2"></script><script defer src="app.js?v=2"></script><script defer src="sync-engine.js?v=2"></script><script defer src="github-store.js?v=2"></script><script defer src="sync.js?v=2"></script>
 </head>
 <body>
 <header class="topbar">
  <div class="brand"><span class="brand-mark" aria-hidden="true">✎</span><div><h1>دفتر المحاضرة</h1><p>الفصل الثالث · تحليل الخوارزميات</p></div></div>
- <div class="top-actions"><span id="saveStatus" role="status">محفوظ على هذا الجهاز</span><button id="filesBtn" class="quiet">حفظ ومشاركة</button><button id="presentBtn" class="primary">وضع العرض <span aria-hidden="true">⛶</span></button></div>
+ <div class="top-actions"><span id="saveStatus" role="status">محفوظ على هذا الجهاز</span><button id="syncBtn">↻ مزامنة</button><button id="filesBtn" class="quiet">حفظ ومشاركة</button><button id="presentBtn" class="primary">وضع العرض <span aria-hidden="true">⛶</span></button></div>
 </header>
 <section class="sessions" aria-label="الفصل الدراسي والشعبة">
  <label class="term-label">الفصل الدراسي <select id="termSelect" aria-label="الفصل الدراسي"></select></label>
  <nav id="sessionTabs" aria-label="نسخ المحاضرة"></nav>
- <button id="newSession" class="new-session">＋ شعبة جديدة</button>
+ <button id="archiveBtn">أرشفة الشعبة</button><label class="archive-toggle"><input type="checkbox" id="showArchived"> الأرشيف</label><button id="newSession" class="new-session">＋ شعبة جديدة</button>
 </section>
 <main>
  <aside class="filmstrip" aria-label="الشرائح"><div class="rail-heading">الشرائح <span>06</span></div><div id="thumbs"></div></aside>
@@ -36,12 +36,26 @@
     <div id="noteSurface" class="note-surface" hidden><span class="note-heading">مساحة الشرح</span><canvas id="noteCanvas" aria-label="الكتابة بجانب الشريحة"></canvas></div>
    </div>
   </div>
-  <footer class="workspace-foot"><span class="hint" id="toolHint">اكتب بالقلم أو الماوس · الشريحة ثابتة</span><div class="paging"><button id="prevBtn" aria-label="الشريحة السابقة">السابق</button><span id="pageCount" dir="ltr">1 / 6</span><button id="nextBtn" aria-label="الشريحة التالية">التالي</button></div><span class="local-note">حفظ على جهازك · دون مزامنة</span></footer>
+  <footer class="workspace-foot"><span class="hint" id="toolHint">اكتب بالقلم أو الماوس · الشريحة ثابتة</span><div class="paging"><button id="prevBtn" aria-label="الشريحة السابقة">السابق</button><span id="pageCount" dir="ltr">1 / 6</span><button id="nextBtn" aria-label="الشريحة التالية">التالي</button></div><span class="local-note">حفظ تلقائي على جهازك</span></footer>
  </section>
 </main>
 <div id="toast" role="status" hidden></div>
 <dialog id="newDialog"><form id="newForm"><header><h2>شعبة جديدة</h2><button type="button" class="close-dialog" aria-label="إغلاق">×</button></header><label>الفصل الدراسي<input id="newTerm" required maxlength="70" placeholder="ربيع 2027"></label><label>اسم الشعبة<input id="newName" required maxlength="70" placeholder="الشعبة الثانية"></label><label>ابدأ من<select id="copyFrom"><option value="raw">الشرائح الخام · دون ملاحظات</option><option value="current">نسخ ملاحظات الشعبة الحالية</option></select></label><p class="subtle">تبقى ملاحظات كل شعبة مستقلة عن الأخرى.</p><button class="primary" type="submit">إنشاء الشعبة</button></form></dialog>
 <dialog id="clearDialog"><form method="dialog"><h2>مسح ملاحظات هذه الشريحة؟</h2><p>سيُمسح الشرح فوق الشريحة وبجانبها في الشعبة المفتوحة فقط. يمكنك التراجع بعد المسح.</p><div class="dialog-actions"><button value="cancel">إلغاء</button><button id="confirmClear" class="danger" value="clear">مسح الملاحظات</button></div></form></dialog>
-<dialog id="filesDialog"><header><h2>حفظ ومشاركة</h2><button class="close-dialog" aria-label="إغلاق">×</button></header><p class="subtle">الحفظ التلقائي خاص بهذا المتصفح. نزّل نسخة احتياطية للاحتفاظ بالشرح خارج الجهاز.</p><div class="file-actions"><button id="backupBtn"><strong>تنزيل نسخة قابلة للتعديل</strong><span>ملاحظات الشعبة الحالية، لإعادة فتحها لاحقًا</span></button><button id="importBtn"><strong>استيراد نسخة محفوظة</strong><span>تُضاف كشعبة جديدة، دون استبدال ملاحظاتك</span></button><button id="shareBtn"><strong>نسخة للطلبة</strong><span>ملف عرض مستقل يضم الشرائح والملاحظات</span></button><button id="printBtn"><strong>طباعة / حفظ PDF</strong><span>الشرائح مع الملاحظات حسب وضع العرض الحالي</span></button></div><p class="connection-note">الموقع مستضاف على GitHub؛ مزامنة الملاحظات بين الأجهزة غير مفعّلة في هذه التجربة.</p><input type="file" id="importFile" accept=".json,application/json" hidden></dialog>
-<script>/* Assets and drawing state are kept separate; this prototype does not contact GitHub. */</script>
+<dialog id="filesDialog"><header><h2>حفظ ومشاركة</h2><button class="close-dialog" aria-label="إغلاق">×</button></header><p class="subtle">الحفظ التلقائي خاص بهذا المتصفح. نزّل نسخة احتياطية للاحتفاظ بالشرح خارج الجهاز.</p><div class="file-actions"><button id="backupBtn"><strong>تنزيل نسخة قابلة للتعديل</strong><span>ملاحظات الشعبة الحالية، لإعادة فتحها لاحقًا</span></button><button id="importBtn"><strong>استيراد نسخة محفوظة</strong><span>تُضاف كشعبة جديدة، دون استبدال ملاحظاتك</span></button><button id="shareBtn"><strong>نسخة للطلبة</strong><span>ملف عرض مستقل يضم الشرائح والملاحظات</span></button><button id="printBtn"><strong>طباعة / حفظ PDF</strong><span>الشرائح مع الملاحظات حسب وضع العرض الحالي</span></button></div><p class="connection-note">زر المزامنة يحفظ الشعب والشرح في مساحة خاصة للمدرس. مشاركة نسخة للطلبة عملية منفصلة؛ ولا يمكن سحب ملف سبق تنزيله.</p><input type="file" id="importFile" accept=".json,application/json" hidden></dialog>
+
+<dialog id="syncDialog" aria-labelledby="syncTitle">
+<header><h2 id="syncTitle">مزامنة خاصة بالمدرس</h2><button id="syncClose" class="close-dialog" aria-label="إغلاق">×</button></header>
+<p>يُحفظ الشرح والشعب في مساحة خاصة، منفصلة عن الشرائح العامة. المزامنة لا تنشر إجاباتك للطلبة.</p>
+<div id="syncCredentials">
+<details><summary>طريقة الربط التجريبية</summary><ol>
+<li>افتح <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener noreferrer">إعداد رمز محدود الصلاحية في GitHub</a>.</li>
+<li>اختر مدة صلاحية قصيرة، ثم <b>Only select repositories</b> وحدد <b dir="ltr">lecture-viewer-notes</b> فقط.</li>
+<li>في صلاحيات المستودع اختر <b dir="ltr">Contents: Read and write</b>، ثم أنشئ الرمز وانسخه إلى الحقل أدناه.</li>
+</ol><p>لا ترسل الرمز في المحادثة. يُرسل إلى GitHub للتحقق والحفظ، ويبقى في ذاكرة هذه الصفحة فقط حتى إغلاقها أو إلغاء الربط. هذا ربط مؤقت للتجربة؛ تسجيل الدخول المعتاد يمكن إضافته لاحقًا.</p></details>
+<label>رمز الربط الخاص بالمدرس<input id="syncToken" type="password" autocomplete="off" spellcheck="false" autocapitalize="off" dir="ltr" placeholder="github_pat_…"></label>
+</div>
+<p id="syncMessage" role="status" aria-live="polite"></p>
+<div class="dialog-actions"><button id="syncConnect" class="primary">ربط المساحة الخاصة</button><button id="syncNow" class="primary" hidden>مزامنة الآن</button><button id="syncDisconnect" hidden>إلغاء الربط</button></div>
+</dialog>
 </body></html>
