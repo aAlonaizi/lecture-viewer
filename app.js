@@ -64,9 +64,12 @@ document.addEventListener('keydown',e=>{if(document.querySelector('dialog[open]'
 window.addEventListener('beforeunload',()=>{finish();if(saveFailed)return;save();});document.addEventListener('visibilitychange',()=>{if(document.hidden)finish();});new ResizeObserver(()=>fit()).observe($('stage'));
 $('slideImage').onerror=()=>toast('تعذّر فتح صورة الشريحة. تحقق من وجود ملفات الصور.');
 slides.forEach((s,i)=>{const b=document.createElement('button');b.className='thumb';b.setAttribute('aria-label',`الشريحة ${i+1}: ${s.title}`);const img=document.createElement('img');img.src=s.src;img.alt='';const label=document.createElement('span');label.textContent=`${i+1} · ${s.title}`;b.append(img,label);b.onclick=()=>navigate(i);$('thumbs').append(b);});
-$('archiveBtn').onclick=()=>{finish();const session=current();if(!session)return;session.archived=!session.archived;if(session.archived&&!showArchived)state.active=state.sessions.find(s=>!s.archived&&s.term===state.term)?.id||'raw';save();renderSessions();renderSlide();toast(session.archived?'أُرشفت الشعبة. النسخ التي سبق تنزيلها لا يمكن سحبها.':'أُعيدت الشعبة من الأرشيف.');};
+$('archiveBtn').onclick=async()=>{finish();const session=current();if(!session)return;if(!session.archived&&window.revokeLectureSection){try{await window.revokeLectureSection(session.id);}catch(e){toast(e.message);return;}}session.archived=!session.archived;if(session.archived&&!showArchived)state.active=state.sessions.find(s=>!s.archived&&s.term===state.term)?.id||'raw';save();renderSessions();renderSlide();toast(session.archived?'أُرشفت الشعبة. النسخ التي سبق تنزيلها لا يمكن سحبها.':'أُعيدت الشعبة من الأرشيف.');};
 $('showArchived').onchange=e=>{finish();showArchived=e.target.checked;if(!showArchived&&current()?.archived)state.active='raw';renderSessions();renderSlide();save();};
 window.LectureWorkspace={
+ current:()=>{finish();return current()?clone(current()):null;},
+ publishInfo:()=>clone(state.publishInfo||{}),
+ setPublishInfo:(id,info)=>{state.publishInfo ||= {};state.publishInfo[id]=info;save();},
  base:()=>clone(state.syncBase||{}),
  snapshot:()=>{finish();return {format:'lecture-workspace',version:1,deck:state.deck,sessions:clone(state.sessions)};},
  validate:input=>{if(!input||input.format!=='lecture-workspace'||input.version!==1||input.deck!==state.deck||!Array.isArray(input.sessions)||input.sessions.length>500)throw Error('ملف المزامنة لا يطابق هذا الفصل.');const sessions=input.sessions.map(validateSession),ids=new Set();for(const s of sessions){if(!/^[a-zA-Z0-9-]{1,100}$/.test(s.id)||ids.has(s.id))throw Error('تكرار أو خطأ في تعريف الشعبة.');ids.add(s.id);}return {format:input.format,version:1,deck:state.deck,sessions};},
