@@ -2,14 +2,15 @@
 (() => {
 const slides = window.LECTURE_SLIDES;
 const $ = id => document.getElementById(id);
-const STORAGE = 'lecture-viewer:chapter3:v1';
+const LEGACY_STORAGE = 'lecture-viewer:chapter3:v1';
+let STORAGE='', activeAccount=null;
 const clone = x => JSON.parse(JSON.stringify(x));
 const blank=()=>({slide:[],note:[]});
 const colors = ['#6d28d9','#dc2626','#2563eb','#172033'];
 const uid = () => crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 const fresh = () => ({version:1,deck:'chapter-03-six-v1',active:'demo',term:'خريف 2026',slide:0,sessions:[{id:'demo',name:'شعبة تجريبية',term:'خريف 2026',createdAt:new Date().toISOString(),annotations:{}}]});
 let state=fresh(), loadError=false;
-try { const saved=localStorage.getItem(STORAGE); if(saved) {const parsed=JSON.parse(saved);if(parsed.version===1 && parsed.deck===state.deck && Array.isArray(parsed.sessions)){state=parsed;state.sessions=state.sessions.map(validateSession);if(!state.sessions.length)state=fresh();if(state.active!=='raw'&&!state.sessions.some(s=>s.id===state.active))state.active=state.sessions[0].id;state.slide=Math.max(0,Math.min(slides.length-1,Number(state.slide)||0));}} } catch {loadError=true;state=fresh();}
+state.sessions=[];state.active='raw';
 let showArchived=false;
 let tool='pen', color=colors[0], width=4, notes=false, showInk=true, drawing=null, busyExport=false;
 let saveFailed=loadError, history=new Map(), redoHistory=new Map(), toastTimer;
@@ -19,7 +20,7 @@ const key=()=>`${state.active}:${slides[state.slide].id}`;
 const annotations=()=>current()?.annotations[slides[state.slide].id] || blank();
 function ensureAnnotations(){const session=current(); if(!session)return null;return session.annotations[slides[state.slide].id] ||= blank();}
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4200);}
-function save(){try{localStorage.setItem(STORAGE,JSON.stringify(state));saveFailed=false;$('saveStatus').textContent='محفوظ على هذا الجهاز';$('saveStatus').style.color='';}catch{saveFailed=true;$('saveStatus').textContent='تعذّر الحفظ · نزّل نسخة احتياطية';$('saveStatus').style.color='#b42335';toast('تعذّر الحفظ في المتصفح. نزّل نسخة احتياطية من «حفظ ومشاركة».');}}
+function save(){if(!activeAccount)return;try{localStorage.setItem(STORAGE,JSON.stringify(state));saveFailed=false;$('saveStatus').textContent='محفوظ على هذا الجهاز';$('saveStatus').style.color='';}catch{saveFailed=true;$('saveStatus').textContent='تعذّر الحفظ · نزّل نسخة احتياطية';$('saveStatus').style.color='#b42335';toast('تعذّر الحفظ في المتصفح. نزّل نسخة احتياطية من «حفظ ومشاركة».');}}
 function remember(){const k=key(), stack=history.get(k)||[];stack.push(clone(annotations()));if(stack.length>40)stack.shift();history.set(k,stack);redoHistory.set(k,[]);}
 function undo(){finish();if(!current())return;const k=key(),stack=history.get(k)||[];if(!stack.length)return;const redo=redoHistory.get(k)||[];redo.push(clone(annotations()));redoHistory.set(k,redo);current().annotations[slides[state.slide].id]=stack.pop();save();redraw();updateTools();}
 function redo(){finish();if(!current())return;const k=key(),stack=redoHistory.get(k)||[];if(!stack.length)return;const back=history.get(k)||[];back.push(clone(annotations()));history.set(k,back);current().annotations[slides[state.slide].id]=stack.pop();save();redraw();updateTools();}
@@ -28,7 +29,7 @@ function renderSessions(){const visible=state.sessions.filter(s=>showArchived||!
 function renderSlide(){finish();$('slideTitle').textContent=slides[state.slide].title;$('slideImage').src=slides[state.slide].src;$('slideImage').alt=slides[state.slide].title;$('pageCount').textContent=`${state.slide+1} / ${slides.length}`;$('prevBtn').disabled=state.slide===0;$('nextBtn').disabled=state.slide===slides.length-1;document.querySelectorAll('.thumb').forEach((el,i)=>{el.classList.toggle('active',i===state.slide);el.setAttribute('aria-current',i===state.slide?'true':'false');});updateTools();fit();}
 function navigate(index){finish();state.slide=Math.max(0,Math.min(slides.length-1,index));save();renderSlide();}
 function switchSession(id){finish();if(id!=='raw'&&!state.sessions.some(s=>s.id===id))return;state.active=id;if(current())state.term=current().term;showInk=true;save();renderSessions();renderSlide();}
-function newSessionDialog(){finish();$('newTerm').value=state.term;$('newName').value='';$('copyFrom').value='raw';$('copyFrom').options[1].disabled=!current();$('newDialog').showModal();setTimeout(()=>$('newName').focus(),30);}
+function newSessionDialog(){if(!activeAccount)return;finish();$('newTerm').value=state.term;$('newName').value='';$('copyFrom').value='raw';$('copyFrom').options[1].disabled=!current();$('newDialog').showModal();setTimeout(()=>$('newName').focus(),30);}
 function createSession(name,term,copy){const session={id:uid(),name:name.trim(),term:term.trim(),createdAt:new Date().toISOString(),annotations:copy&&current()?clone(current().annotations):{}};if(!session.name||!session.term||session.name.length>70||session.term.length>70)throw Error('أدخل اسم الشعبة والفصل الدراسي.');state.sessions.push(session);state.active=session.id;state.term=session.term;state.slide=0;showInk=true;save();renderSessions();renderSlide();toast('أُنشئت شعبة مستقلة. النسخ الأخرى لم تتغير.');return session;}
 function fit(){const stage=$('stage'),ratio=slides[state.slide].ratio,extra=notes?.42:0;const maxW=Math.max(180,stage.clientWidth-10),maxH=Math.max(100,stage.clientHeight-10);const w=Math.min(maxW/(1+extra),maxH*ratio),h=w/ratio;$('board').style.width=`${w*(1+extra)}px`;$('board').style.height=`${h}px`;$('slideSurface').style.width=`${w}px`;$('noteSurface').style.width=`${w*extra}px`;$('noteSurface').hidden=!notes;for(const id of ['slideCanvas','noteCanvas']){const c=$(id),rect=c.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,3);c.width=Math.round(rect.width*dpr);c.height=Math.round(rect.height*dpr);}redraw();}
 function drawStroke(ctx,stroke,w,h){if(!stroke.points.length)return;ctx.strokeStyle=stroke.color;ctx.fillStyle=stroke.color;ctx.lineCap='round';ctx.lineJoin='round';const scale=h/900;const pts=stroke.points; if(pts.length===1){const p=pts[0];ctx.beginPath();ctx.arc(p.x*w,p.y*h,Math.max(.5,stroke.width*scale/2),0,Math.PI*2);ctx.fill();return;}for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i];ctx.lineWidth=Math.max(.5,stroke.width*scale*(.6+.4*(b.p||.5)));ctx.beginPath();ctx.moveTo(a.x*w,a.y*h);ctx.lineTo(b.x*w,b.y*h);ctx.stroke();}}
@@ -67,6 +68,27 @@ slides.forEach((s,i)=>{const b=document.createElement('button');b.className='thu
 $('archiveBtn').onclick=async()=>{finish();const session=current();if(!session)return;if(!session.archived&&window.revokeLectureSection){try{await window.revokeLectureSection(session.id);}catch(e){toast(e.message);return;}}session.archived=!session.archived;if(session.archived&&!showArchived)state.active=state.sessions.find(s=>!s.archived&&s.term===state.term)?.id||'raw';save();renderSessions();renderSlide();toast(session.archived?'أُرشفت الشعبة. النسخ التي سبق تنزيلها لا يمكن سحبها.':'أُعيدت الشعبة من الأرشيف.');};
 $('showArchived').onchange=e=>{finish();showArchived=e.target.checked;if(!showArchived&&current()?.archived)state.active='raw';renderSessions();renderSlide();save();};
 window.LectureWorkspace={
+ account:()=>activeAccount?clone(activeAccount):null,
+ lock:()=>{finish();activeAccount=null;STORAGE='';state=fresh();state.sessions=[];state.active='raw';history.clear();redoHistory.clear();renderSessions();renderSlide();},
+ activate:(account,remote)=>{
+  finish();activeAccount=account;STORAGE=LEGACY_STORAGE+':account:'+account.id;
+  let saved=localStorage.getItem(STORAGE);
+  if(!saved&&account.role==='admin')saved=localStorage.getItem(LEGACY_STORAGE);
+  state=fresh();state.sessions=[];state.active='raw';
+  if(saved){try{const parsed=JSON.parse(saved);if(parsed.version===1&&parsed.deck===state.deck){parsed.sessions=parsed.sessions.map(validateSession);state=parsed;}}catch{toast('تعذّرت قراءة المسودة القديمة؛ ما زالت محفوظة في المتصفح.');}}
+  state.publishInfo ||= {};
+  for(const item of remote){
+   const local=state.sessions.find(s=>s.id===item.id), known=state.publishInfo[item.id]?.revision||0;
+   if(!local||item.revision>known){
+    if(local){const copy=clone(local);copy.id=uid();copy.name=(copy.name+' · مسودة الجهاز').slice(0,70);state.sessions.push(copy);state.sessions=state.sessions.filter(s=>s.id!==item.id);}
+    state.sessions.push(validateSession(item.session));
+   }
+   state.publishInfo[item.id]={share:item.share,revision:item.revision,published:item.published};
+  }
+  state.slide=Math.max(0,Math.min(slides.length-1,Number(state.slide)||0));
+  if(!state.sessions.some(s=>s.id===state.active&&!s.archived))state.active=state.sessions.find(s=>!s.archived)?.id||'raw';
+  history.clear();redoHistory.clear();save();renderSessions();renderSlide();
+ },
  current:()=>{finish();return current()?clone(current()):null;},
  publishInfo:()=>clone(state.publishInfo||{}),
  setPublishInfo:(id,info)=>{state.publishInfo ||= {};state.publishInfo[id]=info;save();},

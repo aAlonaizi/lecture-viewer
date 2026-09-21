@@ -2,3 +2,5 @@
 
 .archive-toggle{font-size:13px;display:flex;align-items:center;gap:5px;white-space:nowrap}.archive-toggle input{accent-color:var(--purple)}.sessions{flex-wrap:wrap}#sessionTabs{min-width:150px}#archiveBtn{font-size:13px}#syncMessage{white-space:pre-line}#syncDialog a{color:var(--purple)}
 @media(max-width:700px){.topbar{flex-wrap:wrap}.brand{width:100%}.top-actions{width:100%;flex-wrap:wrap}.top-actions button{flex:1}.brand p{margin-top:4px}main{height:calc(100dvh - 280px);min-height:420px}}
+
+.account-gate{position:fixed;inset:0;z-index:100;background:#f5f3f8;display:grid;place-items:center;padding:24px}.account-gate>div{background:white;padding:36px;border:1px solid #e4dcec;border-radius:20px;max-width:480px;text-align:center}.account-locked>header,.account-locked>section,.account-locked>main{visibility:hidden}.account-gate[hidden]{display:none}
