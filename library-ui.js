@@ -1,6 +1,7 @@
 'use strict';
 (()=>{
  const $=id=>document.getElementById(id),w=window.LectureWorkspace,all=window.LECTURE_SLIDES;
+ let drawingLink=null;
  let library={revision:0,courses:[{id:'dsa',name:'هياكل البيانات والخوارزميات باستخدام Python'}],hidden:[],links:{}},prefs={revision:0,terms:[]},chapter='all',coverMode=false;
  const clone=x=>JSON.parse(JSON.stringify(x)),admin=()=>w.account()?.role==='admin';
  function el(tag,text,cls){const e=document.createElement(tag);if(text)e.textContent=text;if(cls)e.className=cls;return e;}
@@ -27,13 +28,13 @@
   const list=library.links[slide.id]||[];
   if(!list.length)body.append(el('p','لا توجد روابط لهذه الشريحة بعد.'));
   for(const [i,l] of list.entries()){
-   const row=el('div',null,'resource-row'),a=el('a',l.label);a.href=l.url;a.target='_blank';a.rel='noopener noreferrer';row.append(a,el('small',l.url,'resource-url'));
+   const row=el('div',null,'resource-row'),a=el('a',l.label);a.href=l.url;a.target='_blank';a.rel='noopener noreferrer';row.append(a,el('small',l.url,'resource-url'));if(admin()){row.append(button(l.rect?'إعادة تحديد المنطقة':'تحديد منطقة على الشريحة',()=>startLinkDrawing(slide.id,i,l)));if(l.rect)row.append(button('إزالة المنطقة',async()=>{try{const next=clone(library);delete next.links[slide.id][i].rect;await persist('library',next);$('libraryDialog').close();linksDialog('أُزيلت المنطقة وبقي الرابط في الصندوق.');}catch(e){status.textContent=e.message;}}));}
    if(admin())row.append(button('حذف الرابط',async()=>{try{const next=clone(library);next.links[slide.id].splice(i,1);await persist('library',next);$('libraryDialog').close();linksDialog('حُذف الرابط.');}catch(e){status.textContent=e.message;status.classList.add('error');}}));body.append(row);
   }
   if(!admin()){body.append(el('p','يدير مالك المحتوى الروابط المشتركة.'));return;}
   const form=el('form'),label=el('input'),url=el('input');label.maxLength=160;url.maxLength=2000;url.inputMode='url';url.dir='ltr';label.placeholder='مثال: ملف التمرين';url.placeholder='example.com أو https://example.com';
   const labelField=el('label','عنوان الرابط'),urlField=el('label','رابط الموقع أو الملف');labelField.append(label);urlField.append(url);
-  const submit=el('button','إضافة الرابط');submit.type='submit';submit.className='primary';form.append(labelField,urlField,el('p','تُحفظ الروابط مباشرة وتظهر فوق الشريحة، وللطلبة عند تحديث رابط الشعبة.','subtle'),submit);body.append(form);
+  const submit=el('button','إضافة الرابط');submit.type='submit';submit.className='primary';form.append(labelField,urlField,el('p','تُحفظ الروابط مباشرة وتظهر في الصندوق أسفل الشريحة، وللطلبة عند تحديث رابط الشعبة.','subtle'),submit);body.append(form);
   form.onsubmit=async event=>{
    event.preventDefault();if(submit.disabled)return;status.classList.remove('error');
    try{
@@ -53,6 +54,16 @@
   };
  }
 
+ function cancelLinkDrawing(){drawingLink=null;$('linkDrawLayer').hidden=true;$('linkDrawLayer').replaceChildren();$('linkDrawHelp').hidden=true;}
+ function startLinkDrawing(slideId,index,link){coverMode=false;renderCovers();drawingLink={slideId,index,url:link.url};$('libraryDialog').close();$('linkDrawLayer').hidden=false;$('linkDrawHelp').hidden=false;}
+ $('cancelLinkDraw').onclick=cancelLinkDrawing;
+ const linkLayer=$('linkDrawLayer');let linkStart=null;
+ const linkPoint=e=>{const r=linkLayer.getBoundingClientRect();return {x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))};};
+ linkLayer.onpointerdown=e=>{if(!drawingLink||e.button!==0)return;e.preventDefault();linkLayer.setPointerCapture(e.pointerId);linkStart={...linkPoint(e),id:e.pointerId};};
+ linkLayer.onpointermove=e=>{if(!linkStart||e.pointerId!==linkStart.id)return;const end=linkPoint(e);let preview=linkLayer.firstElementChild;if(!preview){preview=el('div',null,'link-draw-preview');linkLayer.append(preview);}Object.assign(preview.style,{left:Math.min(linkStart.x,end.x)*100+'%',top:Math.min(linkStart.y,end.y)*100+'%',width:Math.abs(end.x-linkStart.x)*100+'%',height:Math.abs(end.y-linkStart.y)*100+'%'});};
+ linkLayer.onpointerup=async e=>{if(!linkStart||e.pointerId!==linkStart.id||!drawingLink)return;const start=linkStart,end=linkPoint(e),target=drawingLink;linkStart=null;const rect={x:Math.min(start.x,end.x),y:Math.min(start.y,end.y),w:Math.abs(start.x-end.x),h:Math.abs(start.y-end.y)};cancelLinkDrawing();if(rect.w<.01||rect.h<.01){w.toast('حدد مساحة أكبر قليلًا للرابط.');return;}try{const next=clone(library);if(next.links[target.slideId]?.[target.index]?.url!==target.url)throw Error('تغير الرابط أثناء التحديد. افتح الروابط وحاول مجددًا.');next.links[target.slideId][target.index].rect=rect;await persist('library',next);w.toast('حُفظت منطقة الرابط. مرر المؤشر عليها أو اضغط لفتحها.');}catch(e){w.toast(e.message);}};
+ linkLayer.onpointercancel=()=>{linkStart=null;cancelLinkDrawing();};
+ $('showLinks').onchange=e=>document.body.classList.toggle('links-hidden',!e.target.checked);
  $('linksBtn').onclick=()=>linksDialog();
  function renderCovers(){const layer=$('coverLayer');layer.replaceChildren();for(const [i,c] of w.covers().entries()){if(c.revealed)continue;const b=button('كشف الإجابة',()=>{const covers=w.covers();covers[i].revealed=true;w.setCovers(covers);renderCovers();});b.className='answer-cover';Object.assign(b.style,{left:c.x*100+'%',top:c.y*100+'%',width:c.w*100+'%',height:c.h*100+'%'});layer.append(b);}layer.classList.toggle('drawing-cover',coverMode);$('coverBtn').classList.toggle('selected',coverMode);}
  $('coverBtn').onclick=()=>{if(!w.current()){w.toast('أنشئ شعبة أولًا لحفظ الأغطية فيها.');return;}coverMode=!coverMode;renderCovers();w.toast(coverMode?'اسحب فوق الجزء المراد تغطيته، ثم انقر الغطاء لكشفه.':'انتهى وضع رسم الغطاء.');};
@@ -62,7 +73,7 @@
  layer.onpointerdown=e=>{if(!coverMode||!w.current()||e.button!==0)return;e.preventDefault();layer.setPointerCapture(e.pointerId);drag={...point(e),id:e.pointerId};};
  layer.onpointermove=e=>{if(!drag||e.pointerId!==drag.id)return;let preview=layer.querySelector('.cover-preview');if(!preview){preview=el('div',null,'answer-cover cover-preview');layer.append(preview);}const p=point(e);Object.assign(preview.style,{left:Math.min(p.x,drag.x)*100+'%',top:Math.min(p.y,drag.y)*100+'%',width:Math.abs(p.x-drag.x)*100+'%',height:Math.abs(p.y-drag.y)*100+'%'});};
  layer.onpointerup=e=>{if(!drag||e.pointerId!==drag.id)return;const p=point(e),c={x:Math.min(p.x,drag.x),y:Math.min(p.y,drag.y),w:Math.abs(p.x-drag.x),h:Math.abs(p.y-drag.y),revealed:false};drag=null;coverMode=false;if(c.w>.01&&c.h>.01)w.setCovers([...w.covers(),c]);renderCovers();};layer.onpointercancel=()=>{drag=null;renderCovers();};
- window.LectureLibrary={activate:(lib,preferences)=>{library=lib;prefs=preferences;w.refresh();home();},termInactive:(courseId,name)=>allTerms().some(t=>t.courseId===courseId&&t.name===name&&!t.active),terms:id=>allTerms().filter(t=>t.courseId===id&&t.active).map(t=>t.name),selectSlides:(id,name)=>{const hidden=new Set([...library.hidden,...(prefs.terms.find(t=>t.courseId===id&&t.name===name)?.hidden||[])]);return all.filter(s=>s.courseId===id&&!hidden.has(s.id)&&(chapter==='all'||s.chapter===chapter));},isHidden:id=>library.hidden.includes(id)||!!term()?.hidden.includes(id),links:id=>library.links[id]||[],onSlide:slide=>{coverMode=false;renderCovers();$('slideLinks').replaceChildren();for(const l of library.links[slide.id]||[]){const a=el('a',l.label);a.href=l.url;a.target='_blank';a.rel='noopener noreferrer';$('slideLinks').append(a);}$('linksBtn').disabled=slide.id==='empty';$('coverBtn').disabled=!w.current()||slide.id==='empty';}};
+ window.LectureLibrary={activate:(lib,preferences)=>{library=lib;prefs=preferences;w.refresh();home();},termInactive:(courseId,name)=>allTerms().some(t=>t.courseId===courseId&&t.name===name&&!t.active),terms:id=>allTerms().filter(t=>t.courseId===id&&t.active).map(t=>t.name),selectSlides:(id,name)=>{const hidden=new Set([...library.hidden,...(prefs.terms.find(t=>t.courseId===id&&t.name===name)?.hidden||[])]);return all.filter(s=>s.courseId===id&&!hidden.has(s.id)&&(chapter==='all'||s.chapter===chapter));},isHidden:id=>library.hidden.includes(id)||!!term()?.hidden.includes(id),links:id=>library.links[id]||[],showLinks:()=>$('showLinks').checked,onSlide:slide=>{cancelLinkDrawing();coverMode=false;renderCovers();window.LectureLinks.render(document.querySelector('.workspace'),$('slideSurface'),$('slideLinks'),library.links[slide.id]||[],w.inkPointer);$('linksBtn').disabled=slide.id==='empty';$('coverBtn').disabled=!w.current()||slide.id==='empty';}};
  // Shared visibility applies on the next refresh, including another teacher's open editor.
  setInterval(async()=>{if(!w.account())return;try{const response=await fetch(window.LECTURE_PUBLISHING.apiBase+'/api/library',{cache:'no-store'});if(!response.ok)return;const next=await response.json();if(next.revision!==library.revision){library=next;w.refresh();renderHome();}}catch{}},60000);
 })();
