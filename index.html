@@ -5,8 +5,8 @@
 <title>دفتر المحاضرة · المواد</title>
 <meta name="description" content="المواد والشرائح والشعب والملاحظات.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d28d9'/%3E%3Cpath d='M8 8h16v12H8zM12 25l4-5 4 5' stroke='white' fill='none' stroke-width='2'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=10"><link rel="stylesheet" href="link-view.css?v=11">
-<script defer src="receive-drafts.js?v=8"></script><script defer src="slides.js?v=7"></script><script defer src="link-view.js?v=11"></script><script defer src="app.js?v=13"></script><script defer src="publishing-config.js"></script><script defer src="library-ui.js?v=14"></script><script defer src="publisher.js?v=8"></script>
+<link rel="stylesheet" href="style.css?v=15"><link rel="stylesheet" href="link-view.css?v=11">
+<script defer src="receive-drafts.js?v=8"></script><script defer src="slides.js?v=7"></script><script defer src="link-view.js?v=11"></script><script defer src="app.js?v=15"></script><script defer src="publishing-config.js"></script><script defer src="library-ui.js?v=14"></script><script defer src="publisher.js?v=8"></script>
 </head>
 <body class="account-locked">
 <div id="accountGate" class="account-gate"><div><h1>دفتر المحاضرة</h1><p>ادخل إلى حسابك لفتح شعبك وملاحظاتك.</p><button id="connectBtn" class="primary">فتح دفتري</button><p id="connectStatus" role="status"></p></div></div>
@@ -29,7 +29,7 @@
    <div class="tool-group colors" aria-label="لون القلم"><button class="swatch chosen" data-color="#6d28d9" style="--swatch:#6d28d9" aria-label="بنفسجي" aria-pressed="true"></button><button class="swatch" data-color="#dc2626" style="--swatch:#dc2626" aria-label="أحمر" aria-pressed="false"></button><button class="swatch" data-color="#2563eb" style="--swatch:#2563eb" aria-label="أزرق" aria-pressed="false"></button><button class="swatch" data-color="#172033" style="--swatch:#172033" aria-label="أسود" aria-pressed="false"></button></div>
    <label class="width-label">السُمك <input id="width" type="range" min="2" max="12" value="4" aria-label="سمك القلم"><span id="widthValue">4</span></label>
    <div class="tool-group"><button id="undoBtn" title="تراجع (Ctrl+Z)" aria-label="تراجع">↶</button><button id="redoBtn" title="إعادة (Ctrl+Shift+Z)" aria-label="إعادة">↷</button><button id="clearBtn" class="danger-text" title="مسح ملاحظات هذه الشريحة">مسح</button></div>
-   <button id="exitPresent" hidden>إنهاء العرض</button>
+   <div class="presentation-controls"><button id="presentInk" aria-pressed="true">إخفاء الملاحظات</button><button id="presentNotes" aria-pressed="false">مساحة جانبية</button><button id="presentSlides" aria-pressed="false">الشرائح</button><button id="zoomOut" aria-label="تصغير">−</button><button id="zoomReset" title="إعادة الحجم المناسب">100%</button><button id="zoomIn" title="تكبير · أو قرّب إصبعين على التراكباد / Ctrl مع عجلة الماوس" aria-label="تكبير">+</button><button id="panView" title="اسحب بالماوس لتحريك الشريحة المكبرة؛ أو استخدم تمرير التراكباد" aria-pressed="false">تحريك الشريحة</button></div><button id="exitPresent" hidden>إنهاء العرض</button>
   </div>
   <div id="rawBanner" class="raw-banner" hidden>نسخة خام للعرض فقط. <button id="rawCreate">أنشئ شعبة للكتابة عليها</button></div>
   <div id="linkDrawHelp" hidden>اسحب مستطيلًا فوق موضع الرابط. <button id="cancelLinkDraw">إلغاء التحديد</button></div><div id="stage" class="stage">
