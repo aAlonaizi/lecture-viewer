@@ -15,6 +15,7 @@
   const show=()=>{pages.forEach((p,i)=>p.hidden=i!==index);thumbs.forEach((b,i)=>{if(i===index)b.setAttribute('aria-current','true');else b.removeAttribute('aria-current');});$('counter').textContent=`${index+1} / ${pages.length}`;$('prev').disabled=index===0;$('next').disabled=index===pages.length-1;};
   $('prev').onclick=()=>{index=Math.max(0,index-1);show();};$('next').onclick=()=>{index=Math.min(pages.length-1,index+1);show();};$('toggle').onclick=()=>{document.body.classList.toggle('hide-ink');$('toggle').textContent=document.body.classList.contains('hide-ink')?'إظهار الملاحظات':'إخفاء الملاحظات';};$('print').onclick=async()=>{const button=$('print');button.disabled=true;try{await Promise.all([...$('pages').querySelectorAll('img')].map(img=>{img.loading='eager';return img.decode();}));window.print();}catch{alert('تعذّر تحميل بعض الشرائح. حدّث الصفحة قبل الطباعة.');}finally{button.disabled=false;}};
   $('showLinks').onchange=e=>document.body.classList.toggle('links-hidden',!e.target.checked);
+  document.addEventListener('keydown',e=>{if(e.target.isContentEditable||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();$(e.key==='ArrowDown'?'next':'prev').click();}});
   show();$('status').hidden=true;$('pages').hidden=false;$('controls').hidden=false;$('sidebar').hidden=false;
   // Reload a restored tab as well, so browser history cannot silently show a revoked copy.
   window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
