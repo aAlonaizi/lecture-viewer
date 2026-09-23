@@ -10,3 +10,5 @@
 .link-status{color:#286346;min-height:1.5em}.link-status.error{color:#a52a40;background:#fff0f1;padding:10px;border-radius:6px}.resource-url{direction:ltr;overflow-wrap:anywhere;white-space:normal;width:100%;color:var(--muted)}
 
 .presentation-controls{display:none}.presenting .presentation-controls{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.presenting.show-filmstrip .filmstrip{display:block}.presenting.pan-view .stage,.presenting.pan-view canvas{cursor:grab}.presenting.pan-drag .stage,.presenting.pan-drag canvas{cursor:grabbing}.presenting .stage{overscroll-behavior:contain}.board{transform-origin:center center}.presentation-controls button[aria-pressed=true]{background:#ede4fc;color:#5b21b6}
+
+.raw-readonly .toolbar>.tool-group,.raw-readonly .toolbar>.width-label,.raw-readonly #visibilityBtn,.raw-readonly #syncBtn,.raw-readonly #studentLinkBtn,.raw-readonly #archiveBtn{display:none!important}.raw-readonly:not(.presenting) .toolbar{display:none}.raw-readonly .raw-banner{display:block}.raw-readonly .answer-cover{pointer-events:none}

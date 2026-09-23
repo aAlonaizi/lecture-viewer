@@ -22,7 +22,7 @@ const editable=()=>current()||window.LectureLibrary?.rawEditor();
 const annotations=()=>editable()?.annotations[slides[state.slide].id] || blank();
 function ensureAnnotations(){const session=editable(); if(!session)return null;return session.annotations[slides[state.slide].id] ||= blank();}
 function toast(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,4200);}
-function save(){if(!activeAccount)return;try{localStorage.setItem(STORAGE,JSON.stringify(state));saveFailed=false;$('saveStatus').textContent='محفوظ على هذا الجهاز';$('saveStatus').style.color='';if(!current())window.LectureLibrary?.saveDraft();}catch{saveFailed=true;$('saveStatus').textContent='تعذّر الحفظ · نزّل نسخة احتياطية';$('saveStatus').style.color='#b42335';toast('تعذّر الحفظ في المتصفح. نزّل نسخة احتياطية من «حفظ ومشاركة».');}}
+function save(){if(!activeAccount)return;try{localStorage.setItem(STORAGE,JSON.stringify({...state,accountId:activeAccount.id}));saveFailed=false;$('saveStatus').textContent='محفوظ على هذا الجهاز';$('saveStatus').style.color='';if(!current())window.LectureLibrary?.saveDraft();}catch{saveFailed=true;$('saveStatus').textContent='تعذّر الحفظ · نزّل نسخة احتياطية';$('saveStatus').style.color='#b42335';toast('تعذّر الحفظ في المتصفح. نزّل نسخة احتياطية من «حفظ ومشاركة».');}}
 function remember(){const k=key(), stack=history.get(k)||[];stack.push(clone(annotations()));if(stack.length>40)stack.shift();history.set(k,stack);redoHistory.set(k,[]);}
 function undo(){finish();if(!editable())return;const k=key(),stack=history.get(k)||[];if(!stack.length)return;const redo=redoHistory.get(k)||[];redo.push(clone(annotations()));redoHistory.set(k,redo);editable().annotations[slides[state.slide].id]=stack.pop();save();redraw();updateTools();}
 function redo(){finish();if(!editable())return;const k=key(),stack=redoHistory.get(k)||[];if(!stack.length)return;const back=history.get(k)||[];back.push(clone(annotations()));history.set(k,back);editable().annotations[slides[state.slide].id]=stack.pop();save();redraw();updateTools();}
@@ -114,12 +114,14 @@ window.LectureWorkspace={
 
  account:()=>activeAccount?clone(activeAccount):null,
  lock:()=>{finish();activeAccount=null;STORAGE='';state=fresh();state.sessions=[];state.active='raw';history.clear();redoHistory.clear();renderSessions();renderSlide();},
- activate:(account,remote)=>{
+ localSectionIds:account=>{try{const saved=localStorage.getItem(LEGACY_STORAGE+':account:'+account.id)||(account.role==='admin'?localStorage.getItem(LEGACY_STORAGE):null);return [...new Set((JSON.parse(saved||'{}').sessions||[]).flatMap(s=>[s.id,s.migratedFrom].filter(Boolean)))].slice(0,1000);}catch{return [];}},
+ activate:(account,remote,forbidden=[])=>{
   finish();activeAccount=account;STORAGE=LEGACY_STORAGE+':account:'+account.id;
   let saved=localStorage.getItem(STORAGE);
   if(!saved&&account.role==='admin')saved=localStorage.getItem(LEGACY_STORAGE);
   state=fresh();state.sessions=[];state.active='raw';
-  if(saved){try{const parsed=JSON.parse(saved);if(parsed.version===1&&parsed.deck===state.deck){parsed.sessions=parsed.sessions.map(validateSession);state=parsed;}}catch{toast('تعذّرت قراءة المسودة القديمة؛ ما زالت محفوظة في المتصفح.');}}
+  if(saved){try{const parsed=JSON.parse(saved);if((!parsed.accountId||parsed.accountId===account.id)&&parsed.version===1&&parsed.deck===state.deck){parsed.sessions=parsed.sessions.map(validateSession);state=parsed;}}catch{toast('تعذّرت قراءة المسودة القديمة؛ ما زالت محفوظة في المتصفح.');}}
+  if(forbidden.length){const blocked=new Set(forbidden);localStorage.setItem(STORAGE+':quarantined-before-ownership-check',saved||'');state.sessions=state.sessions.filter(s=>!blocked.has(s.id)&&!blocked.has(s.migratedFrom));}
   state.publishInfo ||= {};
   for(const item of remote){
    const local=state.sessions.find(s=>s.id===item.id), known=state.publishInfo[item.id]?.revision||0;
