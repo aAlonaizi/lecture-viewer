@@ -5,6 +5,7 @@
  if(!/^[a-f0-9]{48}$/.test(share||'')){fail('رابط الشعبة غير صحيح. استخدم الرابط الذي أرسله المدرس.');return;}
  try{
   const response=await fetch(window.LECTURE_PUBLISHING.apiBase+'/api/student/'+share,{cache:'no-store',credentials:'omit'});
+  if(response.status===403){const gate=await response.clone().json();if(gate.error==='enrollment_required'&&gate.joinUrl?.startsWith(window.LECTURE_PUBLISHING.apiBase+'/learn/')){location.replace(gate.joinUrl);return;}}
   if(!response.ok){fail(response.status===404?'شرح هذه الشعبة غير متاح حاليًا. قد يكون المدرس أوقف مشاركته.':'تعذّر تحميل آخر نسخة. حاول تحديث الصفحة.');return;}
   const data=await response.json(),session=data.session,slides=data.slides||window.LECTURE_SLIDES;let index=0;if(!slides.length){fail('لا توجد شرائح متاحة في هذه الشعبة حاليًا.');return;}
   const addCovers=(target,id)=>{for(const c of session.covers?.[id]||[]){if(c.revealed)continue;const cover=document.createElement('div');cover.className='answer-cover';cover.textContent='الإجابة مغطاة';Object.assign(cover.style,{left:c.x*100+'%',top:c.y*100+'%',width:c.w*100+'%',height:c.h*100+'%'});target.append(cover);}};
@@ -21,3 +22,4 @@
   window.addEventListener('pageshow',e=>{if(e.persisted)location.reload();});
  }catch{fail('تعذّر الاتصال. حدّث الصفحة عند عودة الإنترنت لعرض آخر نسخة نشرها المدرس.');}
 })();
+
