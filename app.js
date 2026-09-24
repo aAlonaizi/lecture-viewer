@@ -105,6 +105,7 @@ window.LectureWorkspace={
  setRevealedSharedCovers:value=>{finish();if(!current())return;current().revealedSharedCovers=value;save();},
  setSharedHidden:value=>{finish();if(!current())return;current().sharedHidden=value;save();renderSlide();toast('حُفظ الاختيار لهذه الشعبة. اضغط نشر الملاحظات لتحديث عرض الطلبة.');},
  inkPointer:e=>begin(e,'slide',$('slideCanvas')),
+ openSection:(id,slideId)=>{const s=state.sessions.find(s=>s.id===id&&!s.archived);if(!s||window.LectureLibrary?.termInactive(s.courseId||'dsa',s.term))return false;finish();state.courseId=s.courseId||'dsa';state.term=s.term;state.active=s.id;state.slide=0;renderSessions();renderSlide();if(slideId){const index=slides.findIndex(x=>x.id===slideId);if(index>=0)navigate(index);}save();return true;},
  context:()=>({courseId:state.courseId||'dsa',term:state.term,slide:slides[state.slide],sessions:clone(state.sessions)}),
  openCourse:(courseId,term)=>{finish();state.courseId=courseId;const activeTerms=window.LectureLibrary?.terms(courseId)||[];state.term=activeTerms.includes(term)?term:activeTerms[0]||'';state.active=state.sessions.find(s=>(s.courseId||'dsa')===courseId&&s.term===state.term&&!s.archived)?.id||'raw';state.slide=0;save();renderSessions();renderSlide();},
  refresh:()=>{renderSessions();renderSlide();},

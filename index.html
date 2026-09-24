@@ -6,13 +6,13 @@
 <meta name="description" content="المواد والشرائح والشعب والملاحظات.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236d28d9'/%3E%3Cpath d='M8 8h16v12H8zM12 25l4-5 4 5' stroke='white' fill='none' stroke-width='2'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css?v=16"><link rel="stylesheet" href="link-view.css?v=11">
-<script defer src="receive-drafts.js?v=8"></script><script defer src="slides.js?v=7"></script><script defer src="link-view.js?v=11"></script><script defer src="app.js?v=16"></script><script defer src="publishing-config.js"></script><script defer src="library-ui.js?v=18"></script><script defer src="publisher.js?v=16-8"></script>
+<script defer src="receive-drafts.js?v=8"></script><script defer src="slides.js?v=7"></script><script defer src="link-view.js?v=11"></script><script defer src="app.js?v=16"></script><script defer src="publishing-config.js"></script><script defer src="assignment-links.js"></script><script defer src="library-ui.js?v=18"></script><script defer src="publisher.js?v=16-8"></script>
 </head>
 <body class="account-locked">
 <div id="accountGate" class="account-gate"><div><h1>دفتر المحاضرة</h1><p>ادخل إلى حسابك لفتح شعبك وملاحظاتك.</p><button id="connectBtn" class="primary">فتح دفتري</button><p id="connectStatus" role="status"></p></div></div>
 <header class="topbar">
  <div class="brand"><span class="brand-mark" aria-hidden="true">✎</span><div><h1>دفتر المحاضرة</h1><p>المواد والفصول الدراسية</p></div></div>
- <div class="top-actions"><a class="button" href="/classroom/">الطلاب والواجبات</a><button id="homeBtn">المواد والفصول</button><button id="directPrintBtn">طباعة / PDF</button><button id="accountBtn">حسابي</button><button id="logoutBtn">خروج</button><span id="saveStatus" role="status">محفوظ على هذا الجهاز</span><button id="syncBtn">نشر الملاحظات</button><button id="studentLinkBtn">رابط الشعبة</button><button id="filesBtn" class="quiet">حفظ ومشاركة</button><button id="presentBtn" class="primary">وضع العرض <span aria-hidden="true">⛶</span></button></div>
+ <div class="top-actions"><a id="classroomLink" class="button" href="/classroom/">الطلاب والواجبات</a><button id="homeBtn">المواد والفصول</button><button id="directPrintBtn">طباعة / PDF</button><button id="accountBtn">حسابي</button><button id="logoutBtn">خروج</button><span id="saveStatus" role="status">محفوظ على هذا الجهاز</span><button id="syncBtn">نشر الملاحظات</button><button id="studentLinkBtn">رابط الشعبة</button><button id="filesBtn" class="quiet">حفظ ومشاركة</button><button id="presentBtn" class="primary">وضع العرض <span aria-hidden="true">⛶</span></button></div>
 </header>
 <section id="homePage" hidden><h2>موادي</h2><div id="courseCards" class="cards"></div><button id="addCourseBtn">＋ مادة جديدة</button><h2>الفصول الدراسية الفعالة</h2><div id="termCards" class="cards"></div><button id="addTermBtn">＋ فصل دراسي جديد</button><details><summary>الفصول غير الفعالة</summary><div id="inactiveTerms"></div></details></section>
 <section class="sessions" aria-label="الفصل الدراسي والشعبة">
@@ -48,7 +48,4 @@
 <dialog id="filesDialog"><header><h2>حفظ ومشاركة</h2><button class="close-dialog" aria-label="إغلاق">×</button></header><p class="subtle">الحفظ التلقائي خاص بهذا المتصفح. نزّل نسخة احتياطية للاحتفاظ بالشرح خارج الجهاز.</p><div class="file-actions"><button id="backupBtn"><strong>تنزيل نسخة قابلة للتعديل</strong><span>ملاحظات الشعبة الحالية، لإعادة فتحها لاحقًا</span></button><button id="importBtn"><strong>استيراد نسخة محفوظة</strong><span>تُضاف كشعبة جديدة، دون استبدال ملاحظاتك</span></button><button id="shareBtn"><strong>نسخة للطلبة</strong><span>ملف عرض مستقل يضم الشرائح والملاحظات</span></button><button id="printBtn"><strong>طباعة / حفظ PDF</strong><span>الشرائح مع الملاحظات حسب وضع العرض الحالي</span></button></div><p class="connection-note">اضغط «نشر الملاحظات» ليظهر الشرح عند تحديث رابط الشعبة. أرشفة الشعبة توقف الوصول إلى شرحها عبر الرابط. لا يمكن سحب نسخة سبق تنزيلها.</p><input type="file" id="importFile" accept=".json,application/json" hidden></dialog>
 
 
-
-
 <dialog id="libraryDialog"><header><h2 id="libraryDialogTitle"></h2><button id="closeLibraryDialog" aria-label="إغلاق">×</button></header><div id="libraryDialogBody"></div></dialog></body></html>
-
