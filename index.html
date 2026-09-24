@@ -12,7 +12,7 @@
 <div id="accountGate" class="account-gate"><div><h1>دفتر المحاضرة</h1><p>ادخل إلى حسابك لفتح شعبك وملاحظاتك.</p><button id="connectBtn" class="primary">فتح دفتري</button><p id="connectStatus" role="status"></p></div></div>
 <header class="topbar">
  <div class="brand"><span class="brand-mark" aria-hidden="true">✎</span><div><h1>دفتر المحاضرة</h1><p>المواد والفصول الدراسية</p></div></div>
- <div class="top-actions"><button id="homeBtn">المواد والفصول</button><button id="directPrintBtn">طباعة / PDF</button><button id="accountBtn">حسابي</button><button id="logoutBtn">خروج</button><span id="saveStatus" role="status">محفوظ على هذا الجهاز</span><button id="syncBtn">نشر الملاحظات</button><button id="studentLinkBtn">رابط الشعبة</button><button id="filesBtn" class="quiet">حفظ ومشاركة</button><button id="presentBtn" class="primary">وضع العرض <span aria-hidden="true">⛶</span></button></div>
+ <div class="top-actions"><a class="button" href="/classroom/">الطلاب والواجبات</a><button id="homeBtn">المواد والفصول</button><button id="directPrintBtn">طباعة / PDF</button><button id="accountBtn">حسابي</button><button id="logoutBtn">خروج</button><span id="saveStatus" role="status">محفوظ على هذا الجهاز</span><button id="syncBtn">نشر الملاحظات</button><button id="studentLinkBtn">رابط الشعبة</button><button id="filesBtn" class="quiet">حفظ ومشاركة</button><button id="presentBtn" class="primary">وضع العرض <span aria-hidden="true">⛶</span></button></div>
 </header>
 <section id="homePage" hidden><h2>موادي</h2><div id="courseCards" class="cards"></div><button id="addCourseBtn">＋ مادة جديدة</button><h2>الفصول الدراسية الفعالة</h2><div id="termCards" class="cards"></div><button id="addTermBtn">＋ فصل دراسي جديد</button><details><summary>الفصول غير الفعالة</summary><div id="inactiveTerms"></div></details></section>
 <section class="sessions" aria-label="الفصل الدراسي والشعبة">
@@ -48,4 +48,7 @@
 <dialog id="filesDialog"><header><h2>حفظ ومشاركة</h2><button class="close-dialog" aria-label="إغلاق">×</button></header><p class="subtle">الحفظ التلقائي خاص بهذا المتصفح. نزّل نسخة احتياطية للاحتفاظ بالشرح خارج الجهاز.</p><div class="file-actions"><button id="backupBtn"><strong>تنزيل نسخة قابلة للتعديل</strong><span>ملاحظات الشعبة الحالية، لإعادة فتحها لاحقًا</span></button><button id="importBtn"><strong>استيراد نسخة محفوظة</strong><span>تُضاف كشعبة جديدة، دون استبدال ملاحظاتك</span></button><button id="shareBtn"><strong>نسخة للطلبة</strong><span>ملف عرض مستقل يضم الشرائح والملاحظات</span></button><button id="printBtn"><strong>طباعة / حفظ PDF</strong><span>الشرائح مع الملاحظات حسب وضع العرض الحالي</span></button></div><p class="connection-note">اضغط «نشر الملاحظات» ليظهر الشرح عند تحديث رابط الشعبة. أرشفة الشعبة توقف الوصول إلى شرحها عبر الرابط. لا يمكن سحب نسخة سبق تنزيلها.</p><input type="file" id="importFile" accept=".json,application/json" hidden></dialog>
 
 
+
+
 <dialog id="libraryDialog"><header><h2 id="libraryDialogTitle"></h2><button id="closeLibraryDialog" aria-label="إغلاق">×</button></header><div id="libraryDialogBody"></div></dialog></body></html>
+
