@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net; worker-src blob:; connect-src https://cdn.jsdelivr.net; style-src 'none'; img-src 'none'; form-action 'none'; base-uri 'none'"></head><body><script>
+// Loaded in an opaque-origin sandbox on the static host. No cookies, DOM access,
+// or authenticated network origin is available to untrusted Python/JS interop.
+let started=false;
+addEventListener('message',event=>{
+ if(started||event.source!==parent||event.data?.kind!=='run')return;
+ started=true;const {id,code,tests}=event.data;
+ const source=`self.onmessage=async e=>{let output='';try{
+ const {loadPyodide}=await import('https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.mjs');
+ const py=await loadPyodide({stdout:s=>{if(output.length<16000)output+=s+'\\n';},stderr:s=>{if(output.length<16000)output+=s+'\\n';}});
+ self.postMessage({kind:'ready'});
+ const globals=py.toPy({});
+ try{await py.runPythonAsync(e.data.code,{globals});globals.set('__exercise_output',output.trim());await py.runPythonAsync(e.data.tests,{globals});self.postMessage({kind:'result',passed:true,output});}
+ catch(err){self.postMessage({kind:'result',passed:false,output,error:String(err)});}
+ finally{globals.destroy();}
+ }catch(err){self.postMessage({kind:'result',passed:false,output,error:'تعذّر تحميل Python: '+String(err)});}};`;
+ const worker=new Worker(URL.createObjectURL(new Blob([source],{type:'text/javascript'})),{type:'classic'});
+ worker.onmessage=e=>{parent.postMessage({...e.data,id},'*');if(e.data.kind==='result')worker.terminate();};
+ worker.onerror=e=>{parent.postMessage({kind:'result',passed:false,error:e.message||'تعذّر بدء Python',id},'*');worker.terminate();};
+ worker.postMessage({code,tests});
+});
+</script></body></html>
