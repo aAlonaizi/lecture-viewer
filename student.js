@@ -30,8 +30,16 @@ $('slideJumpForm').onsubmit=e=>{e.preventDefault();const input=$('slideJump'),va
   chapterSelect.onchange=()=>{chapter=chapterSelect.value;show();};
   const navigate=step=>{const indices=selected(),position=indices.indexOf(index);index=indices[Math.max(0,Math.min(indices.length-1,position+step))];show();};
   $('prev').onclick=()=>navigate(-1);$('next').onclick=()=>navigate(1);$('toggle').onclick=()=>{document.body.classList.toggle('hide-ink');$('toggle').textContent=document.body.classList.contains('hide-ink')?'إظهار الملاحظات':'إخفاء الملاحظات';};$('print').onclick=async()=>{const button=$('print');button.disabled=true;try{await Promise.all(pages.filter(p=>!p.classList.contains('chapter-excluded')).flatMap(p=>[...p.querySelectorAll('img')]).map(img=>{img.loading='eager';if(img.dataset.originalSrc)img.src=img.dataset.originalSrc;return img.decode();}));await privateNotes?.beforePrint();window.print();}catch{alert('تعذّر تحميل بعض الشرائح. حدّث الصفحة قبل الطباعة.');}finally{button.disabled=false;}};
+
+  let presenting=false,ownsFullscreen=false;
+  const sizePresentation=()=>{if(!presenting)return;const bars=document.querySelector('header').getBoundingClientRect().height+(document.querySelector('.private-tools')?.getBoundingClientRect().height||0);document.body.style.setProperty('--presentation-height',Math.max(120,innerHeight-bars-28)+'px');};
+  const presentation=async enabled=>{presenting=enabled;document.body.classList.toggle('student-presenting',enabled);$('present').textContent=enabled?'الخروج من العرض':'وضع العرض';$('present').setAttribute('aria-pressed',String(enabled));sizePresentation();if(enabled){window.scrollTo(0,0);if(!document.fullscreenElement&&document.documentElement.requestFullscreen)try{await document.documentElement.requestFullscreen();ownsFullscreen=true;sizePresentation();}catch{}}else if(ownsFullscreen&&document.fullscreenElement){ownsFullscreen=false;try{await document.exitFullscreen();}catch{}}};
+  $('present').onclick=()=>presentation(!presenting);
+  document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&presenting){ownsFullscreen=false;void presentation(false);}else sizePresentation();});
+  window.addEventListener('resize',sizePresentation);
+  const presentationObserver=new ResizeObserver(sizePresentation);presentationObserver.observe(document.querySelector('header'));if(document.querySelector('.private-tools'))presentationObserver.observe(document.querySelector('.private-tools'));
   $('showLinks').onchange=e=>document.body.classList.toggle('links-hidden',!e.target.checked);
-  document.addEventListener('keydown',e=>{if(e.target.isContentEditable||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();$(e.key==='ArrowDown'?'next':'prev').click();}});
+  document.addEventListener('keydown',e=>{if(e.target.isContentEditable||['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName))return;if(e.key==='Escape'&&presenting){e.preventDefault();void presentation(false);return;}if(['ArrowDown','ArrowUp','ArrowLeft','ArrowRight','PageDown','PageUp'].includes(e.key)){e.preventDefault();$(['ArrowDown','ArrowLeft','PageDown'].includes(e.key)?'next':'prev').click();}});
   show();$('status').hidden=true;$('pages').hidden=false;$('controls').hidden=false;$('sidebar').hidden=false;
   // Refresh visibility when the teacher releases a task in this section.
   const visibleIds=JSON.stringify(slides.map(s=>s.id));let refreshing=false;
