@@ -16,7 +16,7 @@
   const privateNotes=await window.LearnerNotes?.attach({slides,pages,enrollmentId:share});
   const thumbs=slides.map((slide,i)=>{const button=document.createElement('button');button.type='button';button.className='thumbnail';button.setAttribute('aria-label',`الفصل ${slide.chapter} · ${slide.chapterNumber||i+1}. ${slide.title}`);const img=document.createElement('img');img.loading=i===0?'eager':'lazy';img.src=slide.thumbnail||slide.src;img.decoding='async';img.alt='';const label=document.createElement('span');label.textContent=`الفصل ${slide.chapter} · ${slide.chapterNumber||i+1}. ${slide.title}`;const preview=document.createElement('div');preview.className='thumb-preview';preview.append(img);addCovers(preview,slide.id);button.append(preview,label);button.onclick=()=>{index=i;show();};$('slide-list').append(button);return button;});
   const chapterSelect=$('chapterSelect'),chapters=[...new Set(slides.map(s=>String(s.chapter||'')))].filter(Boolean).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
-  const chapterNames={'1':'الفصل الأول','2':'الفصل الثاني','3':'الفصل الثالث'};
+  const chapterNames={'1':'الفصل الأول','2':'الفصل الثاني','3':'الفصل الثالث','4':'الفصل الرابع'};
   for(const chapter of chapters){const option=document.createElement('option');option.value=chapter;option.textContent=chapterNames[chapter]||'الفصل '+chapter;chapterSelect.append(option);}
   let chapter=new URL(location).searchParams.get('chapter')||'all';if(!chapters.includes(chapter))chapter='all';
   // An explicit slide link takes precedence over an incompatible saved chapter.
