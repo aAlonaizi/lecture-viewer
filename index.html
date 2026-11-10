@@ -48,4 +48,10 @@
 <dialog id="filesDialog"><header><h2>حفظ ومشاركة</h2><button class="close-dialog" aria-label="إغلاق">×</button></header><p class="subtle">الحفظ التلقائي خاص بهذا المتصفح. نزّل نسخة احتياطية للاحتفاظ بالشرح خارج الجهاز.</p><div class="file-actions"><button id="backupBtn"><strong>تنزيل نسخة قابلة للتعديل</strong><span>ملاحظات الشعبة الحالية، لإعادة فتحها لاحقًا</span></button><button id="importBtn"><strong>استيراد نسخة محفوظة</strong><span>تُضاف كشعبة جديدة، دون استبدال ملاحظاتك</span></button><button id="shareBtn"><strong>نسخة للطلبة</strong><span>ملف عرض مستقل يضم الشرائح والملاحظات</span></button><button id="printBtn"><strong>طباعة / حفظ PDF</strong><span>الشرائح مع الملاحظات حسب وضع العرض الحالي</span></button></div><p class="connection-note">اضغط «نشر الملاحظات» ليظهر الشرح عند تحديث رابط الشعبة. أرشفة الشعبة توقف الوصول إلى شرحها عبر الرابط. لا يمكن سحب نسخة سبق تنزيلها.</p><input type="file" id="importFile" accept=".json,application/json" hidden></dialog>
 
 
-<dialog id="libraryDialog"><header><h2 id="libraryDialogTitle"></h2><button id="closeLibraryDialog" aria-label="إغلاق">×</button></header><div id="libraryDialogBody"></div></dialog></body></html>
+<dialog id="libraryDialog"><header><h2 id="libraryDialogTitle"></h2><button id="closeLibraryDialog" aria-label="إغلاق">×</button></header><div id="libraryDialogBody"></div></dialog><script>
+// The notebook now lives at lecture-notes-publisher.aalonaizi-lectures.workers.dev/teacher/ . This older address passes straight on to
+// it (10 Nov 2026) by taking the step the «فتح دفتري» button takes, which also carries this browser's old drafts across, so nobody has
+// to press it on every visit. Open this page with ?stay=1 to keep it as it was.
+window.addEventListener('load',function(){if(new URLSearchParams(location.search).has('stay'))return;var b=document.getElementById('connectBtn'),s=document.getElementById('connectStatus');if(!b||b.hidden)return;if(s)s.textContent='جارٍ فتح دفترك في عنوانه الجديد…';b.click();});
+</script>
+</body></html>
