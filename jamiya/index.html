@@ -76,6 +76,17 @@ li.on .name{background-size:100% 2px;color:var(--done)}
 .note{display:block;font-size:13px;color:var(--ink-soft)}
 .by{display:block;font-size:12px;color:var(--live)}
 .star{color:var(--star);font-size:13px;margin-inline-start:6px}
+li{position:relative}
+li label{padding-bottom:6px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;padding-block:0 10px;padding-inline:56px 16px}
+.chip{font:inherit;font-size:12.5px;border:1.5px dashed var(--rule);background:transparent;color:var(--ink-soft);
+  padding:3px 10px;border-radius:999px;cursor:pointer;min-height:30px}
+.chip.taken{border-style:solid;border-color:transparent;background:var(--claim-bg);color:var(--ink);font-weight:500}
+.chip.inherit{border-style:solid;border-color:var(--rule);color:var(--ink-soft)}
+.chip.hasnote{border-style:solid;border-color:transparent;background:var(--flag-bg);color:var(--flag);font-weight:500}
+li.on .acts .chip{opacity:.6}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.presets button{flex:none;font-size:14px;padding:6px 12px;border-radius:999px;background:transparent;color:var(--ink);border:1.5px solid var(--ink-soft)}
 .flag{display:inline-block;font-size:12px;background:var(--flag-bg);color:var(--flag);border-radius:4px;padding:1px 7px;margin-top:3px}
 .pulse{animation:pulse .9s ease-out}
 @keyframes pulse{from{background:var(--claim-bg)}to{background:transparent}}
@@ -118,6 +129,13 @@ dialog button.ghost{background:transparent;color:var(--ink)}
   <h3>منو اللي يتسوق؟</h3>
   <input id="nameIn" maxlength="20" placeholder="الاسم" autocomplete="off">
   <div class="act"><button id="nameOk">حفظ</button><button class="ghost" id="nameCancel">إلغاء</button></div>
+</dialog>
+
+<dialog id="noteDlg">
+  <h3 id="noteTitle">ملاحظة</h3>
+  <div class="presets"><button type="button">غير متوفر</button><button type="button">غالي</button><button type="button">نشتريه من مكان ثاني</button><button type="button">خذينا البديل</button><button type="button">نجيبه الأسبوع الجاي</button></div>
+  <input id="noteIn" maxlength="60" placeholder="أو اكتب ملاحظتك" autocomplete="off">
+  <div class="act"><button id="noteOk">حفظ</button><button class="ghost" id="noteClear">مسح</button><button class="ghost" id="noteCancel">إلغاء</button></div>
 </dialog>
 
 <script>
@@ -176,6 +194,8 @@ const DATA = [
 /* ---------- state ---------- */
 let checks = {};   // itemId -> {done, by}
 let claims = {};   // secKey -> {name}
+let itemClaims = {}; // itemId -> {name}
+let notes = {};      // itemId -> {note, by}
 let myName = "";
 try{ myName = localStorage.getItem("jamiya-name") || ""; }catch(e){}
 const TOPIC = "jamiya-22048e44180c034c";
@@ -188,16 +208,18 @@ const list = document.getElementById("list");
 const itemEls = {}, secEls = {};
 DATA.forEach(sec=>{
   const s = document.createElement("section");
-  s.innerHTML = `<div class="sh"><h2>${sec.t}</h2><span class="sc"></span><button class="claim" type="button">أنا أجيبه</button></div><ul></ul>`;
+  s.innerHTML = `<div class="sh"><h2>${sec.t}</h2><span class="sc"></span><button class="claim" type="button">أنا أجيب القسم</button></div><ul></ul>`;
   const ul = s.querySelector("ul");
   secEls[sec.k] = s;
   s.querySelector(".claim").addEventListener("click", ()=>toggleClaim(sec.k));
   sec.items.forEach(it=>{
     const id = sec.k + "-" + it.k;
     const li = document.createElement("li");
-    li.innerHTML = `<label><input type="checkbox"><span class="txt"><span class="name">${it.n}</span>${it.s?'<span class="star" title="لوجبات العشاء">★</span>':''}${it.d?`<span class="note">${it.d}</span>`:''}${it.f?`<span class="flag">${it.f}</span>`:''}<span class="by"></span></span></label>`;
+    li.innerHTML = `<label><input type="checkbox"><span class="txt"><span class="name">${it.n}</span>${it.s?'<span class="star" title="لوجبات العشاء">★</span>':''}${it.d?`<span class="note">${it.d}</span>`:''}${it.f?`<span class="flag">${it.f}</span>`:''}<span class="by"></span></span></label><div class="acts"><button type="button" class="chip who"></button><button type="button" class="chip nt"></button></div>`;
     const cb = li.querySelector("input");
     cb.addEventListener("change", ()=>toggleItem(id, cb.checked));
+    li.querySelector(".who").addEventListener("click", ()=>toggleItemClaim(id, sec.k));
+    li.querySelector(".nt").addEventListener("click", ()=>editNote(id, it.n));
     itemEls[id] = li;
     ul.appendChild(li);
   });
@@ -211,7 +233,14 @@ function paint(){
     const was = li.classList.contains("on");
     li.classList.toggle("on", on);
     li.querySelector("input").checked = on;
-    li.querySelector(".by").textContent = on && c.by ? "✓ " + c.by : "";
+    li.querySelector(".by").textContent = on && c.by ? "✓ انشال: " + c.by : "";
+    const sk = id.split("-")[0], own = itemClaims[id]?.name, inh = claims[sk]?.name;
+    const w = li.querySelector(".who");
+    w.textContent = own ? "👤 " + own : inh ? "👤 " + inh + " (القسم)" : "أنا أجيبه";
+    w.className = "chip who" + (own ? " taken" : inh ? " inherit" : "");
+    const nb = li.querySelector(".nt"), nv = notes[id]?.note;
+    nb.textContent = nv ? "📝 " + nv + (notes[id].by ? " — " + notes[id].by : "") : "+ ملاحظة";
+    nb.className = "chip nt" + (nv ? " hasnote" : "");
     if(was !== on && li.dataset.painted){ li.classList.remove("pulse"); void li.offsetWidth; li.classList.add("pulse"); }
     li.dataset.painted = 1;
     total++; if(on) done++;
@@ -224,7 +253,7 @@ function paint(){
     s.classList.toggle("all-done", d===n);
     const b = s.querySelector(".claim"), who = claims[sec.k]?.name;
     b.classList.toggle("taken", !!who);
-    b.textContent = who ? "👤 " + who : "أنا أجيبه";
+    b.textContent = who ? "👤 " + who : "أنا أجيب القسم";
   });
   document.getElementById("total").textContent = total;
   document.getElementById("left").textContent = total-done;
@@ -255,11 +284,38 @@ async function toggleClaim(k){
   paint();
   send({t:"a", k, name: next});
 }
+async function toggleItemClaim(id, sk){
+  if(!myName){ await askName(); if(!myName) return; }
+  const cur = itemClaims[id]?.name;
+  const next = cur === myName ? "" : myName;
+  if(cur && cur !== myName && !confirm(`${cur} بتجيب هالغرض. تبين تاخذينه بدالها؟`)) return;
+  itemClaims[id] = {name: next};
+  paint();
+  send({t:"i", id, name: next});
+}
+const noteDlg = document.getElementById("noteDlg"), noteIn = document.getElementById("noteIn");
+function editNote(id, label){
+  document.getElementById("noteTitle").textContent = "ملاحظة: " + label;
+  noteIn.value = notes[id]?.note || "";
+  const save = v=>{
+    v = v.trim().slice(0,60);
+    notes[id] = {note: v, by: v ? myName : ""};
+    paint(); noteDlg.close();
+    send({t:"n", id, note: v, by: v ? myName : ""});
+  };
+  noteDlg.querySelectorAll(".presets button").forEach(b=> b.onclick = ()=>save(b.textContent));
+  document.getElementById("noteOk").onclick = ()=>save(noteIn.value);
+  document.getElementById("noteClear").onclick = ()=>save("");
+  document.getElementById("noteCancel").onclick = ()=>noteDlg.close();
+  if(noteDlg.showModal) noteDlg.showModal(); else { const v = prompt("ملاحظة", noteIn.value); if(v!==null) save(v); }
+}
 function apply(ev){
   if(!ev || typeof ev!=="object") return;
   if(ev.t==="c" && itemEls[ev.id]) checks[ev.id] = {done: !!ev.d, by: String(ev.by||"").slice(0,20)};
   else if(ev.t==="a" && secEls[ev.k]) claims[ev.k] = {name: String(ev.name||"").slice(0,20)};
-  else if(ev.t==="s"){ checks = ev.checks||{}; claims = ev.claims||{}; }
+  else if(ev.t==="i" && itemEls[ev.id]) itemClaims[ev.id] = {name: String(ev.name||"").slice(0,20)};
+  else if(ev.t==="n" && itemEls[ev.id]) notes[ev.id] = {note: String(ev.note||"").slice(0,60), by: String(ev.by||"").slice(0,20)};
+  else if(ev.t==="s"){ checks = ev.checks||{}; claims = ev.claims||{}; itemClaims = ev.itemClaims||{}; notes = ev.notes||{}; }
 }
 
 /* ---------- name ---------- */
@@ -288,8 +344,8 @@ setHide(h);
 hideBtn.addEventListener("click", ()=>setHide(!document.body.classList.contains("hide")));
 
 /* ---------- local cache ---------- */
-function saveLocal(){ try{ localStorage.setItem(LOCAL, JSON.stringify({checks, claims})); }catch(e){} }
-function loadLocal(){ try{ const o = JSON.parse(localStorage.getItem(LOCAL)||"{}"); checks=o.checks||{}; claims=o.claims||{}; }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(LOCAL, JSON.stringify({checks, claims, itemClaims, notes})); }catch(e){} }
+function loadLocal(){ try{ const o = JSON.parse(localStorage.getItem(LOCAL)||"{}"); checks=o.checks||{}; claims=o.claims||{}; itemClaims=o.itemClaims||{}; notes=o.notes||{}; }catch(e){} }
 
 /* ---------- status ---------- */
 const statusEl = document.getElementById("status");
