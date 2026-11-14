@@ -101,6 +101,15 @@ dialog input{font:inherit;width:100%;padding:10px 12px;border:1.5px solid var(--
 dialog .act{display:flex;gap:8px;margin-top:14px}
 dialog button{font:inherit;flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--ink);cursor:pointer;background:var(--ink);color:var(--sheet)}
 dialog button.ghost{background:transparent;color:var(--ink)}
+.more{font:inherit;font-size:18px;line-height:1;border:none;background:transparent;color:var(--ink-soft);padding:4px 8px;cursor:pointer;border-radius:6px}
+.where{padding:0 16px 8px;font-size:14px;color:var(--ink-soft);cursor:pointer}
+.additem{display:block;width:100%;font:inherit;font-size:14px;text-align:start;border:none;border-top:1px solid var(--rule);background:transparent;color:var(--ink-soft);padding:12px 16px;cursor:pointer}
+.addsec{display:block;width:100%;font:inherit;font-size:15px;border:1.5px dashed var(--ink-soft);background:transparent;color:var(--ink);padding:12px;border-radius:6px;cursor:pointer;margin-top:6px}
+body.hide .additem{display:none}
+dialog .fl{display:block;font-size:13px;color:var(--ink-soft);margin:10px 0 4px}
+dialog select{font:inherit;width:100%;padding:10px 12px;border:1.5px solid var(--ink-soft);border-radius:8px;background:var(--paper);color:var(--ink)}
+dialog button.danger{color:#B42318;border-color:#B42318}
+dialog [hidden]{display:none!important}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -122,6 +131,7 @@ dialog button.ghost{background:transparent;color:var(--ink)}
 <main>
   <div class="meals">عشاء الأسبوع: <b>برجر، سلمون، ناندوز، رز مقلي، تاكو برجر</b> — الأغراض اللي عليها ★ لهالوجبات.</div>
   <div id="list"></div>
+  <button type="button" class="addsec" id="addSecBtn">+ قسم جديد</button>
   <div class="finish">✔ خلصت القائمة كلها</div>
 </main>
 
@@ -138,8 +148,28 @@ dialog button.ghost{background:transparent;color:var(--ink)}
   <div class="act"><button id="noteOk">حفظ</button><button class="ghost" id="noteClear">مسح</button><button class="ghost" id="noteCancel">إلغاء</button></div>
 </dialog>
 
+<dialog id="itemDlg">
+  <h3 id="itemTitle">غرض</h3>
+  <label class="fl" for="itemName">الاسم</label>
+  <input id="itemName" maxlength="40" autocomplete="off">
+  <label class="fl" for="itemSec">القسم</label>
+  <select id="itemSec"></select>
+  <div class="act"><button id="itemOk">حفظ</button><button class="ghost danger" id="itemDel">حذف</button><button class="ghost" id="itemCancel">إلغاء</button></div>
+</dialog>
+
+<dialog id="secDlg">
+  <h3 id="secTitle">قسم</h3>
+  <label class="fl" for="secName">اسم القسم</label>
+  <input id="secName" maxlength="30" autocomplete="off">
+  <label class="fl" for="secNote">وين نلقاه؟</label>
+  <input id="secNote" maxlength="60" placeholder="مثال: الممر ٧ جنب المخبز" autocomplete="off">
+  <div class="act" id="secMoveRow"><button class="ghost" id="secUp">⬆ فوق</button><button class="ghost" id="secDown">⬇ تحت</button></div>
+  <div class="act"><button id="secOk">حفظ</button><button class="ghost" id="secCancel">إلغاء</button></div>
+</dialog>
+
 <script>
-const DATA = [
+/* ---------- base list ---------- */
+const BASE_DATA = [
   {k:"veg", t:"🥬 خضار وفواكه", items:[
     {k:"potato", n:"بطاطس", s:1},
     {k:"lemon", n:"ليمون / لومي أخضر", d:"للسلمون", s:1},
@@ -192,171 +222,255 @@ const DATA = [
 ];
 
 /* ---------- state ---------- */
-let checks = {};   // itemId -> {done, by}
-let claims = {};   // secKey -> {name}
-let itemClaims = {}; // itemId -> {name}
-let notes = {};      // itemId -> {note, by}
+let sections, items, order;      // structure
+let checks, claims, itemClaims, notes, secNotes;
+function resetState(){
+  sections = {}; items = {}; order = [];
+  BASE_DATA.forEach((sec, si)=>{
+    sections[sec.k] = {t: sec.t};
+    order.push(sec.k);
+    sec.items.forEach((it, ii)=>{
+      items[sec.k + "-" + it.k] = {n: it.n, d: it.d||"", s: it.s||0, f: it.f||"", sec: sec.k, pos: si*1000 + ii};
+    });
+  });
+  checks = {}; claims = {}; itemClaims = {}; notes = {}; secNotes = {};
+}
+resetState();
 let myName = "";
 try{ myName = localStorage.getItem("jamiya-name") || ""; }catch(e){}
 const TOPIC = "jamiya-22048e44180c034c";
 const BASE = "https://ntfy.sh/" + TOPIC;
-const LOCAL = "jamiya-week-cache";
-let lastEventAt = 0;
+const LOCAL = "jamiya-week-cache-v2";
+const S = (v, n)=> String(v ?? "").slice(0, n);
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+let posSeq = 1e6;
 
-/* ---------- render ---------- */
-const list = document.getElementById("list");
-const itemEls = {}, secEls = {};
-DATA.forEach(sec=>{
-  const s = document.createElement("section");
-  s.innerHTML = `<div class="sh"><h2>${sec.t}</h2><span class="sc"></span><button class="claim" type="button">أنا أجيب القسم</button></div><ul></ul>`;
-  const ul = s.querySelector("ul");
-  secEls[sec.k] = s;
-  s.querySelector(".claim").addEventListener("click", ()=>toggleClaim(sec.k));
-  sec.items.forEach(it=>{
-    const id = sec.k + "-" + it.k;
-    const li = document.createElement("li");
-    li.innerHTML = `<label><input type="checkbox"><span class="txt"><span class="name">${it.n}</span>${it.s?'<span class="star" title="لوجبات العشاء">★</span>':''}${it.d?`<span class="note">${it.d}</span>`:''}${it.f?`<span class="flag">${it.f}</span>`:''}<span class="by"></span></span></label><div class="acts"><button type="button" class="chip who"></button><button type="button" class="chip nt"></button></div>`;
-    const cb = li.querySelector("input");
-    cb.addEventListener("change", ()=>toggleItem(id, cb.checked));
-    li.querySelector(".who").addEventListener("click", ()=>toggleItemClaim(id, sec.k));
-    li.querySelector(".nt").addEventListener("click", ()=>editNote(id, it.n));
-    itemEls[id] = li;
-    ul.appendChild(li);
-  });
-  list.appendChild(s);
-});
-
-function paint(){
-  let total=0, done=0;
-  for(const id in itemEls){
-    const li = itemEls[id], c = checks[id], on = !!(c && c.done);
-    const was = li.classList.contains("on");
-    li.classList.toggle("on", on);
-    li.querySelector("input").checked = on;
-    li.querySelector(".by").textContent = on && c.by ? "✓ انشال: " + c.by : "";
-    const sk = id.split("-")[0], own = itemClaims[id]?.name, inh = claims[sk]?.name;
-    const w = li.querySelector(".who");
-    w.textContent = own ? "👤 " + own : inh ? "👤 " + inh + " (القسم)" : "أنا أجيبه";
-    w.className = "chip who" + (own ? " taken" : inh ? " inherit" : "");
-    const nb = li.querySelector(".nt"), nv = notes[id]?.note;
-    nb.textContent = nv ? "📝 " + nv + (notes[id].by ? " — " + notes[id].by : "") : "+ ملاحظة";
-    nb.className = "chip nt" + (nv ? " hasnote" : "");
-    if(was !== on && li.dataset.painted){ li.classList.remove("pulse"); void li.offsetWidth; li.classList.add("pulse"); }
-    li.dataset.painted = 1;
-    total++; if(on) done++;
+/* ---------- events ---------- */
+function apply(ev){
+  if(!ev || typeof ev !== "object") return;
+  switch(ev.t){
+    case "c": if(items[ev.id]) checks[ev.id] = {done: !!ev.d, by: S(ev.by,20)}; break;
+    case "a": if(sections[ev.k]) claims[ev.k] = {name: S(ev.name,20)}; break;
+    case "i": if(items[ev.id]) itemClaims[ev.id] = {name: S(ev.name,20)}; break;
+    case "n": if(items[ev.id]) notes[ev.id] = {note: S(ev.note,60), by: S(ev.by,20)}; break;
+    case "sec+":
+      if(ev.k && !sections[ev.k]){ sections[ev.k] = {t: S(ev.title,30) || "قسم"}; order.push(ev.k); }
+      break;
+    case "secr": if(sections[ev.k]) sections[ev.k].t = S(ev.title,30) || sections[ev.k].t; break;
+    case "sn": if(sections[ev.k]) secNotes[ev.k] = {note: S(ev.note,60), by: S(ev.by,20)}; break;
+    case "ord":
+      if(Array.isArray(ev.order)){
+        const known = ev.order.filter(k=>sections[k]);
+        order = known.concat(order.filter(k=>!known.includes(k)));
+      }
+      break;
+    case "item+":
+      if(ev.id && !items[ev.id] && sections[ev.sec]) items[ev.id] = {n: S(ev.n,40) || "غرض", d:"", s:0, f:"", sec: ev.sec, pos: ++posSeq, by: S(ev.by,20)};
+      break;
+    case "itemr": if(items[ev.id] && S(ev.n,40)) items[ev.id].n = S(ev.n,40); break;
+    case "mv": if(items[ev.id] && sections[ev.sec] && items[ev.id].sec !== ev.sec){ items[ev.id].sec = ev.sec; items[ev.id].pos = ++posSeq; } break;
+    case "del": if(items[ev.id]) items[ev.id].gone = true; break;
   }
-  DATA.forEach(sec=>{
-    const s = secEls[sec.k];
-    const n = sec.items.length;
-    const d = sec.items.filter(it=>checks[sec.k+"-"+it.k]?.done).length;
-    s.querySelector(".sc").textContent = d ? `${d}/${n}` : `${n}`;
-    s.classList.toggle("all-done", d===n);
-    const b = s.querySelector(".claim"), who = claims[sec.k]?.name;
-    b.classList.toggle("taken", !!who);
-    b.textContent = who ? "👤 " + who : "أنا أجيب القسم";
-  });
-  document.getElementById("total").textContent = total;
-  document.getElementById("left").textContent = total-done;
-  document.getElementById("prog").style.width = (done/total*100) + "%";
-  document.body.classList.toggle("complete", total===done);
-  document.getElementById("meBtn").textContent = myName ? "👤 " + myName : "اكتبي اسمك";
 }
-
-/* ---------- actions ---------- */
 async function send(ev){
-  saveLocal();
+  apply(ev); paint(); saveLocal();
   try{
     const r = await fetch(BASE, {method:"POST", body: JSON.stringify(ev)});
     if(!r.ok) throw new Error(r.status);
   }catch(e){ setStatus("ما انحفظ، جرّب مرة ثانية", false); }
 }
-function toggleItem(id, on){
-  checks[id] = {done:on, by: on ? myName : ""};
-  paint();
-  send({t:"c", id, d: on?1:0, by: on?myName:""});
+
+/* ---------- render ---------- */
+const list = document.getElementById("list");
+const esc = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let prevOn = {};
+function liveItems(k){
+  return Object.entries(items).filter(([id,it])=>it.sec===k && !it.gone).sort((a,b)=>a[1].pos-b[1].pos);
 }
+function paint(){
+  const scroll = window.scrollY;
+  list.innerHTML = "";
+  let total=0, done=0;
+  order.forEach(k=>{
+    const sec = sections[k]; if(!sec) return;
+    const its = liveItems(k);
+    const d = its.filter(([id])=>checks[id]?.done).length;
+    total += its.length; done += d;
+    const who = claims[k]?.name, sn = secNotes[k]?.note;
+    const s = document.createElement("section");
+    s.classList.toggle("all-done", its.length>0 && d===its.length);
+    s.innerHTML = `<div class="sh"><h2>${esc(sec.t)}</h2><span class="sc">${d?`${d}/${its.length}`:its.length}</span>
+      <button class="claim${who?" taken":""}" type="button">${who?"👤 "+esc(who):"أنا أجيب القسم"}</button>
+      <button class="more" type="button" aria-label="خيارات القسم">⋯</button></div>
+      ${sn?`<div class="where">📍 ${esc(sn)}</div>`:""}<ul></ul>
+      <button class="additem" type="button">+ غرض جديد</button>`;
+    s.querySelector(".claim").onclick = ()=>toggleClaim(k);
+    s.querySelector(".more").onclick = ()=>editSection(k);
+    s.querySelector(".where")?.addEventListener("click", ()=>editSection(k));
+    s.querySelector(".additem").onclick = ()=>addItem(k);
+    const ul = s.querySelector("ul");
+    its.forEach(([id,it])=>{
+      const c = checks[id], on = !!(c && c.done);
+      const own = itemClaims[id]?.name, nv = notes[id]?.note;
+      const li = document.createElement("li");
+      li.classList.toggle("on", on);
+      if(id in prevOn && prevOn[id] !== on) li.classList.add("pulse");
+      prevOn[id] = on;
+      li.innerHTML = `<label><input type="checkbox"${on?" checked":""}><span class="txt"><span class="name">${esc(it.n)}</span>${it.s?'<span class="star" title="لوجبات العشاء">★</span>':''}${it.d?`<span class="note">${esc(it.d)}</span>`:''}${it.f?`<span class="flag">${esc(it.f)}</span>`:''}${it.by?`<span class="note">أضافته ${esc(it.by)}</span>`:''}<span class="by">${on&&c.by?"✓ انشال: "+esc(c.by):""}</span></span></label>
+        <div class="acts"><button type="button" class="chip who${own?" taken":who?" inherit":""}">${own?"👤 "+esc(own):who?"👤 "+esc(who)+" (القسم)":"أنا أجيبه"}</button><button type="button" class="chip nt${nv?" hasnote":""}">${nv?"📝 "+esc(nv)+(notes[id].by?" — "+esc(notes[id].by):""):"+ ملاحظة"}</button><button type="button" class="chip mv">نقل / تعديل</button></div>`;
+      const cb = li.querySelector("input");
+      cb.onchange = ()=>send({t:"c", id, d: cb.checked?1:0, by: cb.checked?myName:""});
+      li.querySelector(".who").onclick = ()=>toggleItemClaim(id);
+      li.querySelector(".nt").onclick = ()=>editNote(id);
+      li.querySelector(".mv").onclick = ()=>editItem(id);
+      ul.appendChild(li);
+    });
+    list.appendChild(s);
+  });
+  document.getElementById("total").textContent = total;
+  document.getElementById("left").textContent = total-done;
+  document.getElementById("prog").style.width = total ? (done/total*100) + "%" : "0";
+  document.body.classList.toggle("complete", total>0 && total===done);
+  document.getElementById("meBtn").textContent = myName ? "👤 " + myName : "اكتبي اسمك";
+  window.scrollTo(0, scroll);
+}
+
+/* ---------- actions ---------- */
+async function needName(){ if(!myName) await askName(); return !!myName; }
 async function toggleClaim(k){
-  if(!myName){ await askName(); if(!myName) return; }
+  if(!await needName()) return;
   const cur = claims[k]?.name;
-  const next = cur === myName ? "" : myName;
   if(cur && cur !== myName && !confirm(`${cur} ماخذة هالقسم. تبين تاخذينه بدالها؟`)) return;
-  claims[k] = {name: next};
-  paint();
-  send({t:"a", k, name: next});
+  send({t:"a", k, name: cur === myName ? "" : myName});
 }
-async function toggleItemClaim(id, sk){
-  if(!myName){ await askName(); if(!myName) return; }
+async function toggleItemClaim(id){
+  if(!await needName()) return;
   const cur = itemClaims[id]?.name;
-  const next = cur === myName ? "" : myName;
   if(cur && cur !== myName && !confirm(`${cur} بتجيب هالغرض. تبين تاخذينه بدالها؟`)) return;
-  itemClaims[id] = {name: next};
-  paint();
-  send({t:"i", id, name: next});
+  send({t:"i", id, name: cur === myName ? "" : myName});
 }
+function openDlg(d){ if(d.showModal) d.showModal(); else d.setAttribute("open",""); }
+function closeDlg(d){ if(d.close) d.close(); else d.removeAttribute("open"); }
+
 const noteDlg = document.getElementById("noteDlg"), noteIn = document.getElementById("noteIn");
-function editNote(id, label){
-  document.getElementById("noteTitle").textContent = "ملاحظة: " + label;
+function editNote(id){
+  document.getElementById("noteTitle").textContent = "ملاحظة: " + items[id].n;
   noteIn.value = notes[id]?.note || "";
-  const save = v=>{
-    v = v.trim().slice(0,60);
-    notes[id] = {note: v, by: v ? myName : ""};
-    paint(); noteDlg.close();
-    send({t:"n", id, note: v, by: v ? myName : ""});
-  };
+  const save = v=>{ v = v.trim().slice(0,60); closeDlg(noteDlg); send({t:"n", id, note: v, by: v ? myName : ""}); };
   noteDlg.querySelectorAll(".presets button").forEach(b=> b.onclick = ()=>save(b.textContent));
   document.getElementById("noteOk").onclick = ()=>save(noteIn.value);
   document.getElementById("noteClear").onclick = ()=>save("");
-  document.getElementById("noteCancel").onclick = ()=>noteDlg.close();
-  if(noteDlg.showModal) noteDlg.showModal(); else { const v = prompt("ملاحظة", noteIn.value); if(v!==null) save(v); }
-}
-function apply(ev){
-  if(!ev || typeof ev!=="object") return;
-  if(ev.t==="c" && itemEls[ev.id]) checks[ev.id] = {done: !!ev.d, by: String(ev.by||"").slice(0,20)};
-  else if(ev.t==="a" && secEls[ev.k]) claims[ev.k] = {name: String(ev.name||"").slice(0,20)};
-  else if(ev.t==="i" && itemEls[ev.id]) itemClaims[ev.id] = {name: String(ev.name||"").slice(0,20)};
-  else if(ev.t==="n" && itemEls[ev.id]) notes[ev.id] = {note: String(ev.note||"").slice(0,60), by: String(ev.by||"").slice(0,20)};
-  else if(ev.t==="s"){ checks = ev.checks||{}; claims = ev.claims||{}; itemClaims = ev.itemClaims||{}; notes = ev.notes||{}; }
+  document.getElementById("noteCancel").onclick = ()=>closeDlg(noteDlg);
+  openDlg(noteDlg);
 }
 
+const itemDlg = document.getElementById("itemDlg"), itemName = document.getElementById("itemName"), itemSec = document.getElementById("itemSec");
+function fillSecSelect(sel){
+  itemSec.innerHTML = order.filter(k=>sections[k]).map(k=>`<option value="${esc(k)}"${k===sel?" selected":""}>${esc(sections[k].t)}</option>`).join("");
+}
+function editItem(id){
+  const it = items[id];
+  document.getElementById("itemTitle").textContent = "تعديل أو نقل غرض";
+  itemName.value = it.n; fillSecSelect(it.sec);
+  const del = document.getElementById("itemDel"); del.hidden = false;
+  document.getElementById("itemOk").onclick = ()=>{
+    const n = itemName.value.trim().slice(0,40), sec = itemSec.value;
+    closeDlg(itemDlg);
+    if(n && n !== it.n) send({t:"itemr", id, n});
+    if(sec !== it.sec) send({t:"mv", id, sec});
+  };
+  del.onclick = ()=>{ if(confirm(`تحذف «${it.n}» من القائمة؟`)){ closeDlg(itemDlg); send({t:"del", id}); } };
+  document.getElementById("itemCancel").onclick = ()=>closeDlg(itemDlg);
+  openDlg(itemDlg); setTimeout(()=>itemName.focus(), 50);
+}
+function addItem(k){
+  document.getElementById("itemTitle").textContent = "غرض جديد";
+  itemName.value = ""; fillSecSelect(k);
+  document.getElementById("itemDel").hidden = true;
+  document.getElementById("itemOk").onclick = ()=>{
+    const n = itemName.value.trim().slice(0,40);
+    if(!n){ itemName.focus(); return; }
+    closeDlg(itemDlg);
+    send({t:"item+", id: newId("x"), sec: itemSec.value, n, by: myName});
+  };
+  document.getElementById("itemCancel").onclick = ()=>closeDlg(itemDlg);
+  openDlg(itemDlg); setTimeout(()=>itemName.focus(), 50);
+}
+
+const secDlg = document.getElementById("secDlg"), secName = document.getElementById("secName"), secNote = document.getElementById("secNote");
+function moveSec(k, dir){
+  const o = order.filter(x=>sections[x]); const i = o.indexOf(k), j = i + dir;
+  if(i<0 || j<0 || j>=o.length) return;
+  [o[i], o[j]] = [o[j], o[i]];
+  send({t:"ord", order: o});
+}
+function editSection(k){
+  const isNew = !k;
+  document.getElementById("secTitle").textContent = isNew ? "قسم جديد" : "تعديل القسم";
+  secName.value = isNew ? "" : sections[k].t;
+  secNote.value = isNew ? "" : (secNotes[k]?.note || "");
+  document.getElementById("secMoveRow").hidden = isNew;
+  document.getElementById("secUp").onclick = ()=>moveSec(k, -1);
+  document.getElementById("secDown").onclick = ()=>moveSec(k, 1);
+  document.getElementById("secOk").onclick = ()=>{
+    const t = secName.value.trim().slice(0,30), n = secNote.value.trim().slice(0,60);
+    if(!t){ secName.focus(); return; }
+    closeDlg(secDlg);
+    let key = k;
+    if(isNew){ key = newId("s"); send({t:"sec+", k: key, title: t}); }
+    else if(t !== sections[k].t) send({t:"secr", k, title: t});
+    if(n !== (secNotes[key]?.note || "")) send({t:"sn", k: key, note: n, by: n ? myName : ""});
+  };
+  document.getElementById("secCancel").onclick = ()=>closeDlg(secDlg);
+  openDlg(secDlg); if(isNew) setTimeout(()=>secName.focus(), 50);
+}
+document.getElementById("addSecBtn").onclick = ()=>editSection(null);
+
 /* ---------- name ---------- */
-const dlg = document.getElementById("nameDlg"), nameIn = document.getElementById("nameIn");
+const nameDlg = document.getElementById("nameDlg"), nameIn = document.getElementById("nameIn");
 function askName(){
   return new Promise(res=>{
     nameIn.value = myName;
-    const done = ()=>{ dlg.close(); res(); };
     document.getElementById("nameOk").onclick = ()=>{
       myName = nameIn.value.trim().slice(0,20);
       try{ localStorage.setItem("jamiya-name", myName); }catch(e){}
-      paint(); done();
+      closeDlg(nameDlg); paint(); res();
     };
-    document.getElementById("nameCancel").onclick = done;
-    if(dlg.showModal) dlg.showModal(); else { const v = prompt("الاسم", myName); if(v!==null){ myName=v.trim(); paint(); } res(); }
-    setTimeout(()=>nameIn.focus(), 50);
+    document.getElementById("nameCancel").onclick = ()=>{ closeDlg(nameDlg); res(); };
+    openDlg(nameDlg); setTimeout(()=>nameIn.focus(), 50);
   });
 }
-document.getElementById("meBtn").addEventListener("click", askName);
+document.getElementById("meBtn").onclick = askName;
 
 /* ---------- hide done ---------- */
 const hideBtn = document.getElementById("hideBtn");
 function setHide(v){ document.body.classList.toggle("hide", v); hideBtn.setAttribute("aria-pressed", v); try{localStorage.setItem("jamiya-hide", v?"1":"");}catch(e){} }
 let h=false; try{ h = localStorage.getItem("jamiya-hide")==="1"; }catch(e){}
 setHide(h);
-hideBtn.addEventListener("click", ()=>setHide(!document.body.classList.contains("hide")));
+hideBtn.onclick = ()=>setHide(!document.body.classList.contains("hide"));
 
 /* ---------- local cache ---------- */
-function saveLocal(){ try{ localStorage.setItem(LOCAL, JSON.stringify({checks, claims, itemClaims, notes})); }catch(e){} }
-function loadLocal(){ try{ const o = JSON.parse(localStorage.getItem(LOCAL)||"{}"); checks=o.checks||{}; claims=o.claims||{}; itemClaims=o.itemClaims||{}; notes=o.notes||{}; }catch(e){} }
+function saveLocal(){ try{ localStorage.setItem(LOCAL, JSON.stringify({sections, items, order, checks, claims, itemClaims, notes, secNotes, posSeq})); }catch(e){} }
+function loadLocal(){
+  try{
+    const o = JSON.parse(localStorage.getItem(LOCAL)||"null"); if(!o) return;
+    ({sections, items, order, checks, claims, itemClaims, notes, secNotes} = o);
+    posSeq = o.posSeq || posSeq;
+  }catch(e){ resetState(); }
+}
 
 /* ---------- status ---------- */
 const statusEl = document.getElementById("status");
 function setStatus(t, live){ statusEl.textContent = t; statusEl.classList.toggle("live", !!live); }
 
-/* ---------- live sync (replays history, then streams) ---------- */
+/* ---------- live sync: replay all events, then stream ---------- */
 loadLocal(); paint();
-let es, replayed = false;
+let es, lastEventAt = 0, firstConnect = true;
 function connect(){
   if(es) es.close();
-  const since = replayed && lastEventAt ? lastEventAt : "all";
+  const since = firstConnect ? "all" : (lastEventAt || "all");
+  let pendingReset = firstConnect;    // first message rebuilds from the full history
+  firstConnect = false;
   es = new EventSource(BASE + "/sse?since=" + since);
   es.onopen = ()=> setStatus("متصل ومباشر", true);
   es.onmessage = m=>{
@@ -364,11 +478,13 @@ function connect(){
     if(n.event !== "message") return;
     lastEventAt = Math.max(lastEventAt, n.time||0);
     let ev; try{ ev = JSON.parse(n.message); }catch(e){ return; }
-    apply(ev); paint(); saveLocal();
+    if(pendingReset){ resetState(); pendingReset = false; }
+    apply(ev); schedulePaint();
   };
-  es.onerror = ()=>{ setStatus("يعيد الاتصال…", false); };
-  replayed = true;
+  es.onerror = ()=> setStatus("يعيد الاتصال…", false);
 }
+let paintQueued = false;
+function schedulePaint(){ if(paintQueued) return; paintQueued = true; requestAnimationFrame(()=>{ paintQueued = false; paint(); saveLocal(); }); }
 connect();
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && (!es || es.readyState===2)) connect(); });
 </script>
