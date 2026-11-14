@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>جمعية الأسبوع</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8FC; --sheet:#FFFFFF; --ink:#26358A; --ink-soft:#5B67A8;
+  --rule:#DCE1F2; --margin:#E6A3B4; --done:#9AA1BE; --star:#C2410C;
+  --flag-bg:#FFF4E0; --flag:#8A5A00; --claim-bg:#E8ECFB; --live:#1F8A4C;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10131F; --sheet:#171B2B; --ink:#C9D1FF; --ink-soft:#8F99CF;
+    --rule:#262C45; --margin:#7A3F52; --done:#5A6080; --star:#FB923C;
+    --flag-bg:#33280F; --flag:#F3C66B; --claim-bg:#232A47; --live:#4ADE80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10131F; --sheet:#171B2B; --ink:#C9D1FF; --ink-soft:#8F99CF;
+  --rule:#262C45; --margin:#7A3F52; --done:#5A6080; --star:#FB923C;
+  --flag-bg:#33280F; --flag:#F3C66B; --claim-bg:#232A47; --live:#4ADE80;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Readex Pro",Tahoma,"Segoe UI",system-ui,sans-serif;font-size:17px;line-height:1.5}
+header{position:sticky;top:0;z-index:5;background:var(--paper);
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 12px;border-bottom:2px solid var(--margin)}
+.wrap{max-width:560px;margin:0 auto}
+.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:25px;font-weight:700}
+.count{font-size:15px;color:var(--ink-soft);white-space:nowrap}
+.count b{font-size:22px;color:var(--ink)}
+.bar{margin-top:10px;height:6px;border-radius:3px;background:var(--rule);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ink);transition:width .25s}
+.row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.me{font:inherit;font-size:14px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);
+  padding:6px 12px;border-radius:999px;cursor:pointer}
+.tools button{font:inherit;font-size:14px;border:1.5px solid var(--ink-soft);background:transparent;color:var(--ink);
+  padding:6px 12px;border-radius:999px;cursor:pointer}
+.tools button[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.status{margin-inline-start:auto;font-size:13px;color:var(--ink-soft);display:flex;align-items:center;gap:6px}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--done)}
+.status.live::before{background:var(--live)}
+main{max-width:560px;margin:0 auto;padding:12px 12px 40px}
+.meals{background:var(--sheet);border-radius:6px;padding:10px 16px;font-size:15px;color:var(--ink-soft);margin-top:4px}
+.meals b{color:var(--ink);font-weight:500}
+section{background:var(--sheet);margin:14px 0;border-radius:6px;border-inline-start:3px solid var(--margin);overflow:hidden}
+.sh{display:flex;align-items:center;gap:10px;padding:12px 16px 8px}
+h2{margin:0;font-size:18px;font-weight:700;flex:1}
+.sc{font-size:14px;color:var(--ink-soft)}
+.claim{font:inherit;font-size:13px;border:1.5px dashed var(--ink-soft);background:transparent;color:var(--ink-soft);
+  padding:3px 10px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.claim.taken{border-style:solid;border-color:transparent;background:var(--claim-bg);color:var(--ink);font-weight:500}
+ul{list-style:none;margin:0;padding:0}
+li{border-top:1px solid var(--rule)}
+label{display:flex;align-items:center;gap:14px;padding:13px 16px;min-height:54px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;width:26px;height:26px;border:2px solid var(--ink-soft);border-radius:5px;
+  margin:0;display:grid;place-items:center;cursor:pointer;background:transparent}
+input[type=checkbox]::after{content:"";width:12px;height:7px;border:solid var(--sheet);border-width:0 0 3px 3px;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+input[type=checkbox]:checked{background:var(--ink);border-color:var(--ink)}
+input[type=checkbox]:checked::after{opacity:1}
+input:focus-visible,button:focus-visible{outline:3px solid var(--margin);outline-offset:2px}
+.txt{flex:1}
+.name{background-image:linear-gradient(var(--ink),var(--ink));background-repeat:no-repeat;
+  background-position:100% 55%;background-size:0 2px;transition:background-size .2s,color .2s}
+li.on .name{background-size:100% 2px;color:var(--done)}
+.note{display:block;font-size:13px;color:var(--ink-soft)}
+.by{display:block;font-size:12px;color:var(--live)}
+.star{color:var(--star);font-size:13px;margin-inline-start:6px}
+.flag{display:inline-block;font-size:12px;background:var(--flag-bg);color:var(--flag);border-radius:4px;padding:1px 7px;margin-top:3px}
+.pulse{animation:pulse .9s ease-out}
+@keyframes pulse{from{background:var(--claim-bg)}to{background:transparent}}
+body.hide li.on{display:none}
+body.hide section.all-done{display:none}
+.finish{display:none;text-align:center;padding:40px 16px;font-size:20px}
+body.complete .finish{display:block}
+dialog{border:none;border-radius:10px;background:var(--sheet);color:var(--ink);padding:20px;width:min(92vw,360px)}
+dialog::backdrop{background:rgba(10,15,40,.45)}
+dialog h3{margin:0 0 10px;font-size:18px}
+dialog input{font:inherit;width:100%;padding:10px 12px;border:1.5px solid var(--ink-soft);border-radius:8px;background:var(--paper);color:var(--ink)}
+dialog .act{display:flex;gap:8px;margin-top:14px}
+dialog button{font:inherit;flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--ink);cursor:pointer;background:var(--ink);color:var(--sheet)}
+dialog button.ghost{background:transparent;color:var(--ink)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <h1>جمعية الأسبوع</h1>
+      <div class="count"><b id="left">0</b> باقي من <span id="total">0</span></div>
+    </div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="row tools">
+      <button class="me" id="meBtn">اكتبي اسمك</button>
+      <button id="hideBtn" aria-pressed="false">إخفاء اللي انشال</button>
+      <span class="status" id="status">جاري الاتصال…</span>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="meals">عشاء الأسبوع: <b>برجر، سلمون، ناندوز، رز مقلي، تاكو برجر</b> — الأغراض اللي عليها ★ لهالوجبات.</div>
+  <div id="list"></div>
+  <div class="finish">✔ خلصت القائمة كلها</div>
+</main>
+
+<dialog id="nameDlg">
+  <h3>منو اللي يتسوق؟</h3>
+  <input id="nameIn" maxlength="20" placeholder="الاسم" autocomplete="off">
+  <div class="act"><button id="nameOk">حفظ</button><button class="ghost" id="nameCancel">إلغاء</button></div>
+</dialog>
+
+<script>
+const DATA = [
+  {k:"veg", t:"🥬 خضار وفواكه", items:[
+    {k:"potato", n:"بطاطس", s:1},
+    {k:"lemon", n:"ليمون / لومي أخضر", d:"للسلمون", s:1},
+    {k:"gonion", n:"بصل أخضر", d:"للرز المقلي", s:1},
+    {k:"lettuce", n:"خس", d:"للبرجر والتاكو", s:1},
+    {k:"straw", n:"فراولة"},
+    {k:"grapes", n:"عنب"},
+    {k:"fruits", n:"فواكه ثانية", d:"حسب الموجود"}
+  ]},
+  {k:"meat", t:"🍗 لحوم وأسماك", items:[
+    {k:"chicken", n:"دجاج", d:"لعشاء ناندوز", s:1},
+    {k:"breast", n:"صدر دجاج", s:1},
+    {k:"salmon", n:"سلمون", s:1},
+    {k:"mince", n:"لحم مفروم", d:"لتاكو البرجر", s:1}
+  ]},
+  {k:"dairy", t:"🥚 ألبان وبيض", items:[
+    {k:"eggs", n:"بيض", d:"للرز المقلي", s:1},
+    {k:"cheese", n:"جبن", d:"للبرجر", s:1},
+    {k:"yogurt", n:"زبادي سادة"},
+    {k:"labneh", n:"لبنة"},
+    {k:"cream", n:"كريمة طبخ"}
+  ]},
+  {k:"bread", t:"🍞 مخبوزات", items:[
+    {k:"buns", n:"خبز برجر", s:1},
+    {k:"tortilla", n:"تورتيلا بيضا", d:"للتاكو", s:1},
+    {k:"toast", n:"توست"}
+  ]},
+  {k:"pantry", t:"🫙 بقالة", items:[
+    {k:"rice", n:"رز", s:1},
+    {k:"oil", n:"زيت نباتي"},
+    {k:"tuna", n:"تونة"},
+    {k:"corn", n:"ذرة"},
+    {k:"sauce", n:"خردل وكاتشب", s:1},
+    {k:"zaatar", n:"زعتر"},
+    {k:"vinegar", n:"خل"},
+    {k:"flakes", n:"كورن فليكس شوكولاتة", d:"النوع المدوّر"},
+    {k:"chips", n:"شيبس"},
+    {k:"juice", n:"عصير"}
+  ]},
+  {k:"care", t:"🧴 عناية شخصية", items:[
+    {k:"deo", n:"مزيل عرق", d:"لفاطمة"}
+  ]},
+  {k:"home", t:"🧽 أغراض البيت", items:[
+    {k:"tissue", n:"كلينكس وورق تواليت"},
+    {k:"sandbag", n:"أكياس ساندويتش"},
+    {k:"lint", n:"رولة لاصقة للملابس", d:"لإزالة الوبر"},
+    {k:"pan", n:"مقلاة"},
+    {k:"iron", n:"مكواة يدوية", d:"المكواة بس، مو الطقم كامل", f:"تأكد من النوع مع البنات"}
+  ]}
+];
+
+/* ---------- state ---------- */
+let checks = {};   // itemId -> {done, by}
+let claims = {};   // secKey -> {name}
+let myName = "";
+try{ myName = localStorage.getItem("jamiya-name") || ""; }catch(e){}
+const TOPIC = "jamiya-22048e44180c034c";
+const BASE = "https://ntfy.sh/" + TOPIC;
+const LOCAL = "jamiya-week-cache";
+let lastEventAt = 0;
+
+/* ---------- render ---------- */
+const list = document.getElementById("list");
+const itemEls = {}, secEls = {};
+DATA.forEach(sec=>{
+  const s = document.createElement("section");
+  s.innerHTML = `<div class="sh"><h2>${sec.t}</h2><span class="sc"></span><button class="claim" type="button">أنا أجيبه</button></div><ul></ul>`;
+  const ul = s.querySelector("ul");
+  secEls[sec.k] = s;
+  s.querySelector(".claim").addEventListener("click", ()=>toggleClaim(sec.k));
+  sec.items.forEach(it=>{
+    const id = sec.k + "-" + it.k;
+    const li = document.createElement("li");
+    li.innerHTML = `<label><input type="checkbox"><span class="txt"><span class="name">${it.n}</span>${it.s?'<span class="star" title="لوجبات العشاء">★</span>':''}${it.d?`<span class="note">${it.d}</span>`:''}${it.f?`<span class="flag">${it.f}</span>`:''}<span class="by"></span></span></label>`;
+    const cb = li.querySelector("input");
+    cb.addEventListener("change", ()=>toggleItem(id, cb.checked));
+    itemEls[id] = li;
+    ul.appendChild(li);
+  });
+  list.appendChild(s);
+});
+
+function paint(){
+  let total=0, done=0;
+  for(const id in itemEls){
+    const li = itemEls[id], c = checks[id], on = !!(c && c.done);
+    const was = li.classList.contains("on");
+    li.classList.toggle("on", on);
+    li.querySelector("input").checked = on;
+    li.querySelector(".by").textContent = on && c.by ? "✓ " + c.by : "";
+    if(was !== on && li.dataset.painted){ li.classList.remove("pulse"); void li.offsetWidth; li.classList.add("pulse"); }
+    li.dataset.painted = 1;
+    total++; if(on) done++;
+  }
+  DATA.forEach(sec=>{
+    const s = secEls[sec.k];
+    const n = sec.items.length;
+    const d = sec.items.filter(it=>checks[sec.k+"-"+it.k]?.done).length;
+    s.querySelector(".sc").textContent = d ? `${d}/${n}` : `${n}`;
+    s.classList.toggle("all-done", d===n);
+    const b = s.querySelector(".claim"), who = claims[sec.k]?.name;
+    b.classList.toggle("taken", !!who);
+    b.textContent = who ? "👤 " + who : "أنا أجيبه";
+  });
+  document.getElementById("total").textContent = total;
+  document.getElementById("left").textContent = total-done;
+  document.getElementById("prog").style.width = (done/total*100) + "%";
+  document.body.classList.toggle("complete", total===done);
+  document.getElementById("meBtn").textContent = myName ? "👤 " + myName : "اكتبي اسمك";
+}
+
+/* ---------- actions ---------- */
+async function send(ev){
+  saveLocal();
+  try{
+    const r = await fetch(BASE, {method:"POST", body: JSON.stringify(ev)});
+    if(!r.ok) throw new Error(r.status);
+  }catch(e){ setStatus("ما انحفظ، جرّب مرة ثانية", false); }
+}
+function toggleItem(id, on){
+  checks[id] = {done:on, by: on ? myName : ""};
+  paint();
+  send({t:"c", id, d: on?1:0, by: on?myName:""});
+}
+async function toggleClaim(k){
+  if(!myName){ await askName(); if(!myName) return; }
+  const cur = claims[k]?.name;
+  const next = cur === myName ? "" : myName;
+  if(cur && cur !== myName && !confirm(`${cur} ماخذة هالقسم. تبين تاخذينه بدالها؟`)) return;
+  claims[k] = {name: next};
+  paint();
+  send({t:"a", k, name: next});
+}
+function apply(ev){
+  if(!ev || typeof ev!=="object") return;
+  if(ev.t==="c" && itemEls[ev.id]) checks[ev.id] = {done: !!ev.d, by: String(ev.by||"").slice(0,20)};
+  else if(ev.t==="a" && secEls[ev.k]) claims[ev.k] = {name: String(ev.name||"").slice(0,20)};
+  else if(ev.t==="s"){ checks = ev.checks||{}; claims = ev.claims||{}; }
+}
+
+/* ---------- name ---------- */
+const dlg = document.getElementById("nameDlg"), nameIn = document.getElementById("nameIn");
+function askName(){
+  return new Promise(res=>{
+    nameIn.value = myName;
+    const done = ()=>{ dlg.close(); res(); };
+    document.getElementById("nameOk").onclick = ()=>{
+      myName = nameIn.value.trim().slice(0,20);
+      try{ localStorage.setItem("jamiya-name", myName); }catch(e){}
+      paint(); done();
+    };
+    document.getElementById("nameCancel").onclick = done;
+    if(dlg.showModal) dlg.showModal(); else { const v = prompt("الاسم", myName); if(v!==null){ myName=v.trim(); paint(); } res(); }
+    setTimeout(()=>nameIn.focus(), 50);
+  });
+}
+document.getElementById("meBtn").addEventListener("click", askName);
+
+/* ---------- hide done ---------- */
+const hideBtn = document.getElementById("hideBtn");
+function setHide(v){ document.body.classList.toggle("hide", v); hideBtn.setAttribute("aria-pressed", v); try{localStorage.setItem("jamiya-hide", v?"1":"");}catch(e){} }
+let h=false; try{ h = localStorage.getItem("jamiya-hide")==="1"; }catch(e){}
+setHide(h);
+hideBtn.addEventListener("click", ()=>setHide(!document.body.classList.contains("hide")));
+
+/* ---------- local cache ---------- */
+function saveLocal(){ try{ localStorage.setItem(LOCAL, JSON.stringify({checks, claims})); }catch(e){} }
+function loadLocal(){ try{ const o = JSON.parse(localStorage.getItem(LOCAL)||"{}"); checks=o.checks||{}; claims=o.claims||{}; }catch(e){} }
+
+/* ---------- status ---------- */
+const statusEl = document.getElementById("status");
+function setStatus(t, live){ statusEl.textContent = t; statusEl.classList.toggle("live", !!live); }
+
+/* ---------- live sync (replays history, then streams) ---------- */
+loadLocal(); paint();
+let es, replayed = false;
+function connect(){
+  if(es) es.close();
+  const since = replayed && lastEventAt ? lastEventAt : "all";
+  es = new EventSource(BASE + "/sse?since=" + since);
+  es.onopen = ()=> setStatus("متصل ومباشر", true);
+  es.onmessage = m=>{
+    let n; try{ n = JSON.parse(m.data); }catch(e){ return; }
+    if(n.event !== "message") return;
+    lastEventAt = Math.max(lastEventAt, n.time||0);
+    let ev; try{ ev = JSON.parse(n.message); }catch(e){ return; }
+    apply(ev); paint(); saveLocal();
+  };
+  es.onerror = ()=>{ setStatus("يعيد الاتصال…", false); };
+  replayed = true;
+}
+connect();
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && (!es || es.readyState===2)) connect(); });
+</script>
+</body>
+</html>
