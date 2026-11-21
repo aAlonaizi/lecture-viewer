@@ -129,7 +129,7 @@ dialog [hidden]{display:none!important}
   </div>
 </header>
 <main>
-  <div class="meals">عشاء الأسبوع: <b>بطاطس وسلمون، نودلز، طبخة فاطمة (دجاج)، ناندوز</b> — الأغراض اللي عليها ★ لهالوجبات.</div>
+  <div class="meals" id="meals">عشاء الأسبوع: <b>بطاطس وسلمون، نودلز، طبخة فاطمة (دجاج)، ناندوز</b> — الأغراض اللي عليها ★ لهالوجبات.</div>
   <div id="list"></div>
   <button type="button" class="addsec" id="addSecBtn">+ قسم جديد</button>
   <div class="finish">✔ خلصت القائمة كلها</div>
@@ -169,7 +169,7 @@ dialog [hidden]{display:none!important}
 
 <script>
 /* ---------- base list ---------- */
-const BASE_DATA = [
+let BASE_DATA = [
   {k:"veg", t:"🥬 خضار", items:[
     {k:"dill", n:"شبت", d:"للسلمون", s:1},
     {k:"parsley", n:"بقدونس"},
@@ -216,9 +216,33 @@ function resetState(){
 resetState();
 let myName = "";
 try{ myName = localStorage.getItem("jamiya-name") || ""; }catch(e){}
-const TOPIC = "jamiya-22048e44180c034c-w47";
-const BASE = "https://ntfy.sh/" + TOPIC;
-const LOCAL = "jamiya-cache-2026-w47";
+let TOPIC = "jamiya-22048e44180c034c-w47";
+let BASE = "https://ntfy.sh/" + TOPIC;
+let LOCAL = "jamiya-cache-2026-w47";
+
+/* ---------- list carried in the link (#l=...) by the list builder ---------- */
+function b64urlToBytes(t){ t = t.replace(/-/g,"+").replace(/_/g,"/"); while(t.length % 4) t += "="; return Uint8Array.from(atob(t), c=>c.charCodeAt(0)); }
+async function readLinkList(){
+  const m = location.hash.match(/^#l=([jz])([A-Za-z0-9_-]+)$/);
+  if(!m) return null;
+  try{
+    let bytes = b64urlToBytes(m[2]);
+    if(m[1] === "z"){
+      const ds = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      bytes = new Uint8Array(await new Response(ds).arrayBuffer());
+    }
+    const o = JSON.parse(new TextDecoder().decode(bytes));
+    if(o.v !== 1 || !/^[a-z0-9]{6,24}$/.test(o.id) || !Array.isArray(o.secs)) return null;
+    const secs = o.secs.slice(0, 20).map((sec, si)=>({
+      k: /^[a-z0-9]{1,12}$/.test(sec.k) ? sec.k : "s" + si,
+      t: String(sec.t || "قسم").slice(0, 30),
+      items: (Array.isArray(sec.items) ? sec.items : []).slice(0, 80).map((it, ii)=>({
+        k: "i" + ii, n: String(it.n || "").slice(0, 40), d: String(it.d || "").slice(0, 60), s: it.s ? 1 : 0
+      })).filter(it=>it.n)
+    }));
+    return {id: o.id, meals: String(o.meals || "").slice(0, 200), title: String(o.title || "").slice(0, 40), secs};
+  }catch(e){ return null; }
+}
 const S = (v, n)=> String(v ?? "").slice(0, n);
 const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 let posSeq = 1e6;
@@ -442,6 +466,19 @@ const statusEl = document.getElementById("status");
 function setStatus(t, live){ statusEl.textContent = t; statusEl.classList.toggle("live", !!live); }
 
 /* ---------- live sync: replay all events, then stream ---------- */
+(async ()=>{
+const linked = await readLinkList();
+if(linked){
+  BASE_DATA = linked.secs;
+  TOPIC = "jamiya-22048e44180c034c-" + linked.id;
+  BASE = "https://ntfy.sh/" + TOPIC;
+  LOCAL = "jamiya-cache-" + linked.id;
+  const mealsEl = document.getElementById("meals");
+  if(linked.meals){ mealsEl.innerHTML = "عشاء الأسبوع: <b></b> — الأغراض اللي عليها ★ لهالوجبات."; mealsEl.querySelector("b").textContent = linked.meals; }
+  else mealsEl.hidden = true;
+  if(linked.title) document.querySelector("h1").textContent = linked.title;
+  resetState();
+}
 loadLocal(); paint();
 let es, lastEventAt = 0, firstConnect = true;
 function connect(){
@@ -465,6 +502,7 @@ let paintQueued = false;
 function schedulePaint(){ if(paintQueued) return; paintQueued = true; requestAnimationFrame(()=>{ paintQueued = false; paint(); saveLocal(); }); }
 connect();
 document.addEventListener("visibilitychange", ()=>{ if(!document.hidden && (!es || es.readyState===2)) connect(); });
+})();
 </script>
 </body>
 </html>

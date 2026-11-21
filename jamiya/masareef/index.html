@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مصاريف البيت</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F8FC; --sheet:#FFFFFF; --ink:#26358A; --ink-soft:#5B67A8;
+  --rule:#DCE1F2; --margin:#E6A3B4; --done:#9AA1BE; --star:#C2410C;
+  --flag-bg:#FFF4E0; --flag:#8A5A00; --claim-bg:#E8ECFB; --good:#1F8A4C; --bad:#B42318;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#10131F; --sheet:#171B2B; --ink:#C9D1FF; --ink-soft:#8F99CF;
+    --rule:#262C45; --margin:#7A3F52; --done:#5A6080; --star:#FB923C;
+    --flag-bg:#33280F; --flag:#F3C66B; --claim-bg:#232A47; --good:#4ADE80; --bad:#F97066;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#10131F; --sheet:#171B2B; --ink:#C9D1FF; --ink-soft:#8F99CF;
+  --rule:#262C45; --margin:#7A3F52; --done:#5A6080; --star:#FB923C;
+  --flag-bg:#33280F; --flag:#F3C66B; --claim-bg:#232A47; --good:#4ADE80; --bad:#F97066;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Readex Pro",Tahoma,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+header{position:sticky;top:0;z-index:5;background:var(--paper);
+  padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 0;border-bottom:2px solid var(--margin)}
+.wrap{max-width:620px;margin:0 auto}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:24px;font-weight:700}
+.out{border:none;background:transparent;color:var(--ink-soft);font-size:14px;cursor:pointer;padding:6px}
+.tabs{display:flex;gap:4px;margin-top:10px}
+.tabs button{flex:1;border:none;background:transparent;padding:10px 8px;font-size:15px;cursor:pointer;color:var(--ink-soft);
+  border-bottom:3px solid transparent;margin-bottom:-2px}
+.tabs button[aria-selected="true"]{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+main{max-width:620px;margin:0 auto;padding:14px 12px 48px}
+.card{background:var(--sheet);border-radius:6px;border-inline-start:3px solid var(--margin);padding:14px 16px;margin:12px 0}
+h2{margin:0 0 10px;font-size:17px}
+.muted{color:var(--ink-soft);font-size:14px}
+.empty{text-align:center;padding:28px 16px}
+.empty p{margin:6px 0}
+/* login */
+.login{max-width:360px;margin:40px auto;background:var(--sheet);border-radius:10px;padding:22px;border-inline-start:3px solid var(--margin)}
+.login h2{font-size:20px}
+.login label{display:block;font-size:14px;color:var(--ink-soft);margin:12px 0 4px}
+.login input[type=text],.login input[type=password]{width:100%;padding:11px 12px;border:1.5px solid var(--ink-soft);border-radius:8px;background:var(--paper)}
+.login .rem{display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--ink)}
+.primary{display:block;width:100%;margin-top:16px;padding:12px;border-radius:8px;border:none;background:var(--ink);color:var(--sheet);font-weight:500;cursor:pointer}
+.primary:disabled{opacity:.6;cursor:wait}
+.err{color:var(--bad);font-size:14px;min-height:1.5em;margin-top:8px}
+/* months */
+.months{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px}
+.months button{flex:none;border:1.5px solid var(--ink-soft);background:transparent;border-radius:999px;padding:5px 12px;font-size:14px;cursor:pointer}
+.months button[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:12px}
+.big b{font-size:34px;font-weight:700;letter-spacing:0}
+.delta.up{color:var(--bad)} .delta.down{color:var(--good)}
+.facts{display:flex;gap:18px;flex-wrap:wrap;margin-top:6px;font-size:14px;color:var(--ink-soft)}
+.facts b{color:var(--ink);font-weight:500}
+.bars{display:grid;gap:9px}
+.bar{display:grid;grid-template-columns:minmax(0,9.5em) 1fr auto;align-items:center;gap:10px;font-size:14px}
+.bar .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .trk{height:10px;background:var(--rule);border-radius:5px;overflow:hidden}
+.bar .trk i{display:block;height:100%;background:var(--ink);border-radius:5px}
+.bar .v{font-variant-numeric:tabular-nums;min-width:5.5em;text-align:end}
+details.rc{border-top:1px solid var(--rule)}
+details.rc:first-of-type{border-top:none}
+details.rc summary{display:flex;gap:10px;align-items:baseline;padding:10px 0;cursor:pointer;list-style:none}
+details.rc summary::-webkit-details-marker{display:none}
+details.rc summary .st{flex:1}
+details.rc summary .amt{font-variant-numeric:tabular-nums;font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:10px}
+td{padding:5px 0;border-top:1px solid var(--rule);vertical-align:top}
+td.n{text-align:end;font-variant-numeric:tabular-nums;white-space:nowrap;padding-inline-start:10px}
+.void td{color:var(--done);text-decoration:line-through}
+.warn{display:block;font-size:12.5px;background:var(--flag-bg);color:var(--flag);border-radius:4px;padding:3px 8px;margin:4px 0}
+.chg{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--rule);font-size:14px}
+.chg:first-of-type{border-top:none}
+/* builder */
+.field{display:block;margin-bottom:10px}
+.field span{display:block;font-size:14px;color:var(--ink-soft);margin-bottom:4px}
+.field input,.addrow input,.addrow select{width:100%;padding:10px 12px;border:1.5px solid var(--ink-soft);border-radius:8px;background:var(--paper)}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.tools button{border:1.5px solid var(--ink-soft);background:transparent;border-radius:999px;padding:5px 12px;font-size:14px;cursor:pointer}
+.grp h3{margin:14px 0 4px;font-size:15px}
+.it{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--rule);cursor:pointer}
+.it input{appearance:none;-webkit-appearance:none;flex:none;width:24px;height:24px;border:2px solid var(--ink-soft);border-radius:5px;display:grid;place-items:center;margin:0;cursor:pointer}
+.it input::after{content:"";width:11px;height:6px;border:solid var(--sheet);border-width:0 0 3px 3px;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+.it input:checked{background:var(--ink);border-color:var(--ink)}
+.it input:checked::after{opacity:1}
+.it .t{flex:1;min-width:0}
+.it .meta{display:block;font-size:12.5px;color:var(--ink-soft)}
+.due{font-size:12px;background:var(--flag-bg);color:var(--flag);border-radius:4px;padding:1px 7px;margin-inline-start:6px;white-space:nowrap}
+.addrow{display:grid;grid-template-columns:1fr 9em auto;gap:6px;margin-top:12px}
+.addrow button{border:none;background:var(--ink);color:var(--sheet);border-radius:8px;padding:0 14px;cursor:pointer}
+.sticky{position:sticky;bottom:0;background:var(--paper);padding:10px 0 calc(env(safe-area-inset-bottom,0px) + 10px);margin-top:8px}
+.result{font-size:15px;text-align:center;background:var(--paper);border:1px dashed var(--ink-soft);border-radius:8px;padding:8px;margin:10px 0}
+.row2{display:flex;gap:8px}
+.row2 button{flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--ink);background:transparent;cursor:pointer}
+.row2 button.fill{background:var(--ink);color:var(--sheet)}
+[hidden]{display:none!important}
+input:focus-visible,button:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--margin);outline-offset:2px}
+@media (max-width:420px){ .bar{grid-template-columns:minmax(0,7em) 1fr auto} .addrow{grid-template-columns:1fr 1fr} .addrow button{grid-column:1/-1;padding:10px} }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top"><h1>مصاريف البيت</h1><button class="out" id="logout" hidden>تسجيل خروج</button></div>
+    <div class="tabs" id="tabs" role="tablist" hidden>
+      <button role="tab" id="tab-exp" aria-selected="true">المصاريف</button>
+      <button role="tab" id="tab-build" aria-selected="false">جهّز قائمة</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <form class="login" id="loginForm" autocomplete="on">
+    <h2>دخول</h2>
+    <p class="muted">البيانات مشفّرة، وما تنفتح إلا بكلمة المرور.</p>
+    <label for="u">اسم المستخدم</label>
+    <input type="text" id="u" name="username" autocomplete="username" autocapitalize="none" required>
+    <label for="p">كلمة المرور</label>
+    <input type="password" id="p" name="password" autocomplete="current-password" required>
+    <label class="rem"><input type="checkbox" id="remember"> تذكّرني على هذا الجهاز</label>
+    <button class="primary" id="loginBtn">دخول</button>
+    <div class="err" id="loginErr" role="alert"></div>
+  </form>
+
+  <section id="exp" hidden></section>
+
+  <section id="build" hidden>
+    <div class="card">
+      <h2>قائمة جديدة من السجلات</h2>
+      <p class="muted">الأغراض اللي عليها "يمكن خلص" صار لها مدة أطول من المعتاد ما انشرت، وهي مختارة لك. عدّل الاختيار وأضف اللي تبيه، وبعدين أنشئ الرابط وأرسله للبنات.</p>
+      <label class="field"><span>عشاء الأسبوع (اختياري)</span><input id="meals" maxlength="200" placeholder="مثال: سلمون، ناندوز، نودلز"></label>
+      <div class="tools"><button type="button" id="selDue">اختر اللي يمكن خلص</button><button type="button" id="selNone">إلغاء الكل</button></div>
+      <div id="groups"></div>
+      <div class="addrow">
+        <input id="newName" maxlength="40" placeholder="غرض مو بالقائمة">
+        <select id="newCat"></select>
+        <button type="button" id="newAdd">إضافة</button>
+      </div>
+    </div>
+    <div class="sticky wrap">
+      <button class="primary" id="makeLink" type="button">أنشئ رابط القائمة</button>
+      <div id="linkOut" hidden>
+        <div class="result" id="linkText"></div>
+        <div class="row2"><button class="fill" type="button" id="shareLink">مشاركة</button><button type="button" id="copyLink">نسخ</button><button type="button" id="openLink">فتح</button></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===================== crypto (matches tools/household.py) ===================== */
+const enc = new TextEncoder(), dec = new TextDecoder();
+const b64 = s => Uint8Array.from(atob(s), c=>c.charCodeAt(0));
+async function sha256hex(t){ const h = await crypto.subtle.digest("SHA-256", enc.encode(t)); return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,"0")).join(""); }
+async function userKey(name){ return (await sha256hex("jamiya-user:" + name.trim().toLowerCase())).slice(0,24); }
+async function unwrapPrivate(vault, name, password){
+  const uk = await userKey(name), u = vault.users[uk];
+  if(!u) throw new Error("auth");
+  const base = await crypto.subtle.importKey("raw", enc.encode(password), "PBKDF2", false, ["deriveKey"]);
+  const k = await crypto.subtle.deriveKey({name:"PBKDF2", salt:b64(u.salt), iterations:u.iter, hash:"SHA-256"}, base, {name:"AES-GCM", length:256}, false, ["decrypt"]);
+  let pkcs8;
+  try{ pkcs8 = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(u.iv), additionalData:enc.encode("jamiya:" + uk)}, k, b64(u.wrapped)); }
+  catch(e){ throw new Error("auth"); }
+  return crypto.subtle.importKey("pkcs8", pkcs8, {name:"RSA-OAEP", hash:"SHA-256"}, false, ["decrypt"]);
+}
+async function openBlobs(vault, priv){
+  const out = [];
+  for(const b of vault.blobs){
+    const raw = await crypto.subtle.decrypt({name:"RSA-OAEP"}, priv, b64(b.ek));
+    const k = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["decrypt"]);
+    const body = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(b.iv), additionalData:enc.encode("jamiya-blob:" + b.id)}, k, b64(b.ct));
+    out.push(JSON.parse(dec.decode(body)));
+  }
+  return out;
+}
+/* remembered key: non-extractable CryptoKey in IndexedDB (cannot be read out as bytes) */
+function idb(){ return new Promise((res, rej)=>{ const r = indexedDB.open("masareef", 1); r.onupgradeneeded = ()=>r.result.createObjectStore("k"); r.onsuccess = ()=>res(r.result); r.onerror = ()=>rej(r.error); }); }
+async function idbDo(mode, fn){ const db = await idb(); return new Promise((res, rej)=>{ const tx = db.transaction("k", mode); const r = fn(tx.objectStore("k")); tx.oncomplete = ()=>res(r && r.result); tx.onerror = ()=>rej(tx.error); }); }
+const keyGet = ()=> idbDo("readonly", s=>s.get("priv")).catch(()=>null);
+const keyPut = k => idbDo("readwrite", s=>s.put(k, "priv")).catch(()=>{});
+const keyDel = ()=> idbDo("readwrite", s=>s.delete("priv")).catch(()=>{});
+
+/* ===================== helpers ===================== */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const kwd = n => (Math.round(n*1000)/1000).toLocaleString("ar-KW-u-nu-latn", {minimumFractionDigits:3, maximumFractionDigits:3}) + " د.ك";
+const MONTHS = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+const monthName = ym => { const [y,m] = ym.split("-").map(Number); return MONTHS[m-1] + " " + y; };
+const DAY = 86400000;
+const today = ()=>{ const d = new Date(); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); };
+const dayNum = s => { const [y,m,d] = s.split("-").map(Number); return Date.UTC(y, m-1, d); };
+const ago = days => days <= 0 ? "اليوم" : days === 1 ? "أمس" : `قبل ${days} يوم`;
+let CATS = {}, RECORDS = [];
+
+/* ===================== login ===================== */
+async function fetchVault(){
+  const r = await fetch("vault.json", {cache:"no-store"});
+  if(!r.ok) throw new Error("net");
+  return r.json();
+}
+async function start(priv){
+  const vault = await fetchVault();
+  CATS = vault.categories || {};
+  RECORDS = await openBlobs(vault, priv);
+  $("loginForm").hidden = true; $("tabs").hidden = false; $("logout").hidden = false;
+  renderExpenses(); renderBuilder(); showTab("exp");
+}
+$("loginForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const btn = $("loginBtn"), err = $("loginErr");
+  btn.disabled = true; btn.textContent = "جاري الفتح…"; err.textContent = "";
+  try{
+    const vault = await fetchVault();
+    const priv = await unwrapPrivate(vault, $("u").value, $("p").value);
+    if($("remember").checked) await keyPut(priv);
+    $("p").value = "";
+    await start(priv);
+  }catch(ex){
+    err.textContent = ex.message === "auth" ? "اسم المستخدم أو كلمة المرور غلط." : "ما قدرنا نفتح البيانات. تأكد من الإنترنت وجرّب مرة ثانية.";
+  }finally{ btn.disabled = false; btn.textContent = "دخول"; }
+});
+$("logout").onclick = async ()=>{ await keyDel(); location.reload(); };
+(async ()=>{ const k = await keyGet(); if(k){ try{ await start(k); }catch(e){ await keyDel(); } } })();
+
+/* ===================== tabs ===================== */
+function showTab(t){
+  $("exp").hidden = t !== "exp"; $("build").hidden = t !== "build";
+  $("tab-exp").setAttribute("aria-selected", t === "exp"); $("tab-build").setAttribute("aria-selected", t === "build");
+}
+$("tab-exp").onclick = ()=>showTab("exp"); $("tab-build").onclick = ()=>showTab("build");
+
+/* ===================== expenses ===================== */
+let curMonth = null;
+function renderExpenses(){
+  const el = $("exp");
+  const receipts = RECORDS.filter(r=>r.type === "receipt" && r.date).sort((a,b)=>b.date.localeCompare(a.date));
+  if(!receipts.length){
+    el.innerHTML = `<div class="card empty"><p><b>ما فيه فواتير لين الحين.</b></p>
+      <p class="muted">صوّر فاتورة الجمعية وأرسلها لـClaude، فيقراها ويضيفها هنا مشفّرة. وأول ما تنضاف أول فاتورة، يطلع لك هنا ملخص الشهر والأقسام والأسعار.</p>
+      <p class="muted">السجلات الحالية: ${RECORDS.filter(r=>r.type==="list").length} قوائم شراء، وتستخدمها صفحة "جهّز قائمة".</p></div>`;
+    return;
+  }
+  const months = [...new Set(receipts.map(r=>r.date.slice(0,7)))];
+  if(!curMonth || !months.includes(curMonth)) curMonth = months[0];
+  const inMonth = receipts.filter(r=>r.date.startsWith(curMonth));
+  const idx = months.indexOf(curMonth), prev = months[idx+1];
+  const sum = rs => rs.reduce((s,r)=>s + (+r.total || 0), 0);
+  const total = sum(inMonth);
+  let deltaHtml = "";
+  if(prev){
+    const p = sum(receipts.filter(r=>r.date.startsWith(prev)));
+    if(p > 0){ const d = (total - p) / p * 100; deltaHtml = `<span class="delta ${d>0?"up":"down"}">${d>0?"▲":"▼"} ${Math.abs(d).toFixed(0)}٪ عن ${monthName(prev)}</span>`; }
+  }
+  // categories from priced lines; anything not priced shown separately
+  const byCat = {}; let priced = 0;
+  inMonth.forEach(r=>r.items.forEach(i=>{ if(i.amount && !i.void){ byCat[i.category] = (byCat[i.category]||0) + (+i.amount); priced += +i.amount; } }));
+  const unpriced = Math.max(0, total - priced);
+  const catRows = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  if(unpriced > 0.0005) catRows.push(["_", unpriced]);
+  const maxC = Math.max(...catRows.map(r=>r[1]), 0.001);
+  const byStore = {}; inMonth.forEach(r=>{ byStore[r.store] = (byStore[r.store]||0) + (+r.total||0); });
+  const storeRows = Object.entries(byStore).sort((a,b)=>b[1]-a[1]);
+  const maxS = Math.max(...storeRows.map(r=>r[1]), 0.001);
+  const bar = (lab, v, max) => `<div class="bar"><span class="lab">${esc(lab)}</span><span class="trk"><i style="width:${(v/max*100).toFixed(1)}%"></i></span><span class="v">${kwd(v)}</span></div>`;
+  // price changes across all receipts (unit price by canonical name)
+  const hist = {};
+  receipts.slice().reverse().forEach(r=>r.items.forEach(i=>{ if(i.unit && !i.void){ (hist[i.canonical] ||= []).push({d:r.date, u:+i.unit, s:r.store}); } }));
+  const changes = Object.entries(hist).filter(([,h])=>h.length>1).map(([n,h])=>{ const a = h[h.length-2], b = h[h.length-1]; return {n, a, b, pct:(b.u-a.u)/a.u*100}; })
+    .filter(c=>Math.abs(c.pct) >= 1).sort((x,y)=>Math.abs(y.pct)-Math.abs(x.pct)).slice(0,10);
+  el.innerHTML = `
+    <div class="card">
+      <div class="months">${months.map(m=>`<button type="button" data-m="${m}" aria-pressed="${m===curMonth}">${monthName(m)}</button>`).join("")}</div>
+      <div class="big"><b>${kwd(total)}</b>${deltaHtml}</div>
+      <div class="facts"><span><b>${inMonth.length}</b> فاتورة</span><span>متوسط الفاتورة <b>${kwd(total/inMonth.length)}</b></span></div>
+    </div>
+    <div class="card"><h2>حسب القسم</h2><div class="bars">${catRows.map(([k,v])=>bar(k==="_" ? "بدون سعر للسطر" : (CATS[k]||k), v, maxC)).join("")}</div>
+      ${unpriced > 0.0005 ? `<p class="muted">"بدون سعر للسطر" هو الفرق بين مجموع الفواتير والأسطر اللي سعرها واضح.</p>` : ""}</div>
+    ${storeRows.length > 1 ? `<div class="card"><h2>حسب المحل</h2><div class="bars">${storeRows.map(([k,v])=>bar(k, v, maxS)).join("")}</div></div>` : ""}
+    ${changes.length ? `<div class="card"><h2>أسعار تغيّرت</h2>${changes.map(c=>`<div class="chg"><span>${esc(c.n)}</span><span class="delta ${c.pct>0?"up":"down"}">${kwd(c.a.u)} ← ${kwd(c.b.u)} (${c.pct>0?"+":""}${c.pct.toFixed(0)}٪)</span></div>`).join("")}</div>` : ""}
+    <div class="card"><h2>فواتير ${monthName(curMonth)}</h2>
+      ${inMonth.map(r=>`<details class="rc"><summary><span class="muted">${esc(r.date)}</span><span class="st">${esc(r.store)}</span><span class="amt">${r.total ? kwd(+r.total) : "—"}</span></summary>
+        ${(r.warnings||[]).filter(w=>!/^Review every line/.test(w)).map(w=>`<span class="warn">${esc(w)}</span>`).join("")}
+        <table>${r.items.map(i=>`<tr class="${i.void?"void":""}"><td>${esc(i.canonical)}${i.canonical !== i.name ? `<div class="muted">${esc(i.name)}</div>` : ""}</td><td class="n">${i.qty ?? ""}</td><td class="n">${i.amount ? kwd(+i.amount) : "—"}</td></tr>`).join("")}</table>
+      </details>`).join("")}
+    </div>`;
+  el.querySelectorAll(".months button").forEach(b=>b.onclick = ()=>{ curMonth = b.dataset.m; renderExpenses(); });
+}
+
+/* ===================== list builder ===================== */
+let STATS = [], picked = new Set(), extras = [];
+function buildStats(){
+  const m = {};
+  RECORDS.filter(r=>r.date).forEach(r=>r.items.forEach(i=>{
+    if(i.void) return;
+    const k = i.canonical; if(!k) return;
+    const e = (m[k] ||= {n:k, cat:i.category, detail:"", dates:new Set(), last:""});
+    e.dates.add(r.date);
+    if(r.date >= e.last){ e.last = r.date; e.cat = i.category; e.detail = i.detail || e.detail; }
+  }));
+  const t = today();
+  STATS = Object.values(m).map(e=>{
+    const ds = [...e.dates].sort(), n = ds.length;
+    const every = n > 1 ? Math.round((dayNum(ds[n-1]) - dayNum(ds[0])) / DAY / (n-1)) : null;
+    const since = Math.round((t - dayNum(e.last)) / DAY);
+    return {...e, times:n, every, since, due: every !== null && every > 0 && since >= every * 0.9};
+  });
+}
+function renderBuilder(){
+  buildStats();
+  picked = new Set(STATS.filter(s=>s.due).map(s=>s.n));
+  const sel = $("newCat"); sel.innerHTML = Object.entries(CATS).map(([k,t])=>`<option value="${k}">${esc(t)}</option>`).join("");
+  sel.value = "pantry";
+  drawGroups();
+}
+function drawGroups(){
+  const all = STATS.concat(extras);
+  const order = Object.keys(CATS);
+  const groups = order.map(k=>[k, all.filter(s=>s.cat===k)]).filter(([,v])=>v.length);
+  $("groups").innerHTML = groups.map(([k, items])=>`<div class="grp"><h3>${esc(CATS[k]||k)}</h3>${
+    items.sort((a,b)=>(b.due-a.due) || (b.times-a.times) || a.n.localeCompare(b.n, "ar")).map(s=>`
+      <label class="it"><input type="checkbox" data-n="${esc(s.n)}"${picked.has(s.n)?" checked":""}>
+        <span class="t">${esc(s.n)}${s.due?'<span class="due">يمكن خلص</span>':""}
+        <span class="meta">${s.extra ? "مضاف الحين" : `انطلب ${s.times} ${s.times===1?"مرة":"مرات"} · آخر مرة ${ago(s.since)}${s.every?` · كل ~${s.every} يوم`:""}`}${s.detail?` · ${esc(s.detail)}`:""}</span></span></label>`).join("")
+  }</div>`).join("");
+  $("groups").querySelectorAll("input").forEach(cb=>cb.onchange = ()=>{ cb.checked ? picked.add(cb.dataset.n) : picked.delete(cb.dataset.n); updateCount(); });
+  updateCount();
+}
+function updateCount(){ $("makeLink").textContent = `أنشئ رابط القائمة (${picked.size})`; $("linkOut").hidden = true; }
+$("selDue").onclick = ()=>{ STATS.filter(s=>s.due).forEach(s=>picked.add(s.n)); drawGroups(); };
+$("selNone").onclick = ()=>{ picked.clear(); drawGroups(); };
+$("newAdd").onclick = ()=>{
+  const n = $("newName").value.trim().slice(0,40); if(!n) return;
+  if(!STATS.concat(extras).some(s=>s.n===n)) extras.push({n, cat:$("newCat").value, extra:true, times:0, detail:""});
+  picked.add(n); $("newName").value = ""; drawGroups();
+};
+$("newName").addEventListener("keydown", e=>{ if(e.key === "Enter"){ e.preventDefault(); $("newAdd").click(); } });
+
+function bytesToB64url(bytes){ let s = ""; bytes.forEach(b=>s += String.fromCharCode(b)); return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); }
+async function packList(obj){
+  const raw = enc.encode(JSON.stringify(obj));
+  if(typeof CompressionStream === "function"){
+    const cs = new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+    return "z" + bytesToB64url(new Uint8Array(await new Response(cs).arrayBuffer()));
+  }
+  return "j" + bytesToB64url(raw);
+}
+let lastLink = "";
+$("makeLink").onclick = async ()=>{
+  if(!picked.size){ alert("اختر غرض واحد على الأقل."); return; }
+  const all = STATS.concat(extras);
+  const secs = Object.keys(CATS).map(k=>({k, t:CATS[k], items: all.filter(s=>s.cat===k && picked.has(s.n)).map(s=>({n:s.n, d:s.detail||""}))})).filter(s=>s.items.length);
+  const id = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  const payload = await packList({v:1, id, meals:$("meals").value.trim(), secs});
+  lastLink = new URL("../#l=" + payload, location.href).href;
+  $("linkText").textContent = `✓ الرابط جاهز: ${picked.size} غرض. أرسله للبنات.`; $("linkText").dataset.url = lastLink; $("linkOut").hidden = false;
+};
+$("shareLink").onclick = async ()=>{
+  if(navigator.share){ try{ await navigator.share({title:"قائمة الجمعية", text:"قائمة الجمعية لهالأسبوع", url:lastLink}); }catch(e){} }
+  else $("copyLink").click();
+};
+$("copyLink").onclick = async ()=>{ try{ await navigator.clipboard.writeText(lastLink); $("copyLink").textContent = "تم النسخ"; setTimeout(()=>$("copyLink").textContent = "نسخ", 1500); }catch(e){ prompt("انسخ الرابط", lastLink); } };
+$("openLink").onclick = ()=>window.open(lastLink, "_blank", "noopener");
+</script>
+</body>
+</html>
