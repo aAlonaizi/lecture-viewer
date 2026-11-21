@@ -129,7 +129,7 @@ dialog [hidden]{display:none!important}
   </div>
 </header>
 <main>
-  <div class="meals">عشاء الأسبوع: <b>برجر، سلمون، ناندوز، رز مقلي، تاكو برجر</b> — الأغراض اللي عليها ★ لهالوجبات.</div>
+  <div class="meals">عشاء الأسبوع: <b>بطاطس وسلمون، نودلز، طبخة فاطمة (دجاج)، ناندوز</b> — الأغراض اللي عليها ★ لهالوجبات.</div>
   <div id="list"></div>
   <button type="button" class="addsec" id="addSecBtn">+ قسم جديد</button>
   <div class="finish">✔ خلصت القائمة كلها</div>
@@ -170,54 +170,32 @@ dialog [hidden]{display:none!important}
 <script>
 /* ---------- base list ---------- */
 const BASE_DATA = [
-  {k:"veg", t:"🥬 خضار وفواكه", items:[
-    {k:"potato", n:"بطاطس", s:1},
-    {k:"lemon", n:"ليمون / لومي أخضر", d:"للسلمون", s:1},
-    {k:"gonion", n:"بصل أخضر", d:"للرز المقلي", s:1},
-    {k:"lettuce", n:"خس", d:"للبرجر والتاكو", s:1},
-    {k:"straw", n:"فراولة"},
-    {k:"grapes", n:"عنب"},
-    {k:"fruits", n:"فواكه ثانية", d:"حسب الموجود"}
+  {k:"veg", t:"🥬 خضار", items:[
+    {k:"dill", n:"شبت", d:"للسلمون", s:1},
+    {k:"parsley", n:"بقدونس"},
+    {k:"broccoli", n:"بروكلي"},
+    {k:"mushroom", n:"فطر"},
+    {k:"cabbage", n:"ملفوف"},
+    {k:"corn", n:"ذرة حلوة"}
   ]},
-  {k:"meat", t:"🍗 لحوم وأسماك", items:[
-    {k:"chicken", n:"دجاج", d:"لعشاء ناندوز", s:1},
-    {k:"breast", n:"صدر دجاج", s:1},
-    {k:"salmon", n:"سلمون", s:1},
-    {k:"mince", n:"لحم مفروم", d:"لتاكو البرجر", s:1}
+  {k:"meat", t:"🍗 دجاج", items:[
+    {k:"chicken", n:"دجاج أفخاذ وسيقان", d:"لطبخة فاطمة وناندوز", s:1}
   ]},
-  {k:"dairy", t:"🥚 ألبان وبيض", items:[
-    {k:"eggs", n:"بيض", d:"للرز المقلي", s:1},
-    {k:"cheese", n:"جبن", d:"للبرجر", s:1},
-    {k:"yogurt", n:"زبادي سادة"},
-    {k:"labneh", n:"لبنة"},
+  {k:"dairy", t:"🥚 ألبان", items:[
+    {k:"mozz", n:"جبن موزاريلا"},
+    {k:"sour", n:"ساور كريم"},
     {k:"cream", n:"كريمة طبخ"}
   ]},
-  {k:"bread", t:"🍞 مخبوزات", items:[
-    {k:"buns", n:"خبز برجر", s:1},
-    {k:"tortilla", n:"تورتيلا بيضا", d:"للتاكو", s:1},
-    {k:"toast", n:"توست"}
-  ]},
   {k:"pantry", t:"🫙 بقالة", items:[
-    {k:"rice", n:"رز", s:1},
-    {k:"oil", n:"زيت نباتي"},
-    {k:"tuna", n:"تونة"},
-    {k:"corn", n:"ذرة"},
-    {k:"sauce", n:"خردل وكاتشب", s:1},
-    {k:"zaatar", n:"زعتر"},
-    {k:"vinegar", n:"خل"},
-    {k:"flakes", n:"كورن فليكس شوكولاتة", d:"النوع المدوّر"},
-    {k:"chips", n:"شيبس"},
-    {k:"juice", n:"عصير"}
-  ]},
-  {k:"care", t:"🧴 عناية شخصية", items:[
-    {k:"deo", n:"مزيل عرق", d:"لفاطمة"}
+    {k:"noodles", n:"نودلز", s:1},
+    {k:"stock", n:"مرق دجاج"},
+    {k:"hummus", n:"حمص"},
+    {k:"ricecakes", n:"رايس كيك"},
+    {k:"granola", n:"جرانولا", d:"حبوب مو ألواح"}
   ]},
   {k:"home", t:"🧽 أغراض البيت", items:[
-    {k:"tissue", n:"كلينكس وورق تواليت"},
-    {k:"sandbag", n:"أكياس ساندويتش"},
-    {k:"lint", n:"رولة لاصقة للملابس", d:"لإزالة الوبر"},
-    {k:"pan", n:"مقلاة"},
-    {k:"iron", n:"مكواة يدوية", d:"المكواة بس، مو الطقم كامل", f:"تأكد من النوع مع البنات"}
+    {k:"dettol", n:"ديتول للأرضيات"},
+    {k:"ktissue", n:"مناديل مطبخ", d:"علبة وحدة"}
   ]}
 ];
 
@@ -238,9 +216,9 @@ function resetState(){
 resetState();
 let myName = "";
 try{ myName = localStorage.getItem("jamiya-name") || ""; }catch(e){}
-const TOPIC = "jamiya-22048e44180c034c";
+const TOPIC = "jamiya-22048e44180c034c-w47";
 const BASE = "https://ntfy.sh/" + TOPIC;
-const LOCAL = "jamiya-week-cache-v2";
+const LOCAL = "jamiya-cache-2026-w47";
 const S = (v, n)=> String(v ?? "").slice(0, n);
 const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 let posSeq = 1e6;
